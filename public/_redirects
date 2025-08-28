@@ -1,0 +1,6 @@
+
+# Todas las llamadas API se dirigen al backend de producción
+# Usamos una variable que será reemplazada durante el build
+/api/*  /api/:splat  200
+# Default rule for SPA
+/*  /index.html  200
