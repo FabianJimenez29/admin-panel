@@ -69,9 +69,13 @@ export default function LoginPage() {
         toast.error('Datos de usuario inválidos o rol incorrecto');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en login:', error);
-      toast.error(error.message || 'Error de conexión con el servidor');
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Error de conexión con el servidor');
+      }
     } finally {
       setLoading(false);
     }

@@ -133,7 +133,7 @@ export default function Productos() {
         } else {
           // Si no hay datos o no son válidos, usar datos de muestra
           setProductos(sampleProducts);
-          toast.custom((t) => (
+          toast.custom(() => (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-md">
               <div className="flex items-center">
                 <div className="text-yellow-500">
@@ -158,7 +158,7 @@ export default function Productos() {
         } else {
           // Si no hay datos o no son válidos, usar datos de muestra
           setCategorias(sampleCategories);
-          toast.custom((t) => (
+          toast.custom(() => (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-md">
               <div className="flex items-center">
                 <div className="text-yellow-500">
@@ -186,7 +186,7 @@ export default function Productos() {
     };
     
     loadData();
-  }, []);
+  }, [sampleProducts, sampleCategories]);
   
   // Filtrar productos por categoría y búsqueda
   const productosFiltrados = productos.filter(producto => {
@@ -341,9 +341,12 @@ export default function Productos() {
               return;
             }
           }
-        } catch (uploadError: any) {
-          console.error('Error al subir imagen:', uploadError);
-          toast.error(`Error al subir la imagen: ${uploadError.message || 'Error desconocido'}`, { id: 'uploading' });
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(
+            typeof err === 'string' ? err : 'Error desconocido al subir la imagen'
+          );
+          console.error('Error al subir imagen:', error);
+          toast.error(`Error al subir la imagen: ${error.message}`, { id: 'uploading' });
           setSaving(false);
           return;
         }
@@ -384,9 +387,10 @@ export default function Productos() {
       setImagePreview(null);
       setEditingProduct(null);
       setShowProductModal(false);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error('Error desconocido');
       console.error('Error al guardar producto:', error);
-      toast.error(`Error al guardar el producto: ${error.message || 'Error desconocido'}`);
+      toast.error(`Error al guardar el producto: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -812,7 +816,7 @@ export default function Productos() {
                       <div className="mt-1 flex items-center">
                         <span className="inline-block h-12 w-12 rounded-md overflow-hidden bg-gray-100">
                           {imagePreview ? (
-                            <img src={imagePreview} alt="Vista previa" className="h-full w-full object-cover" />
+                            <Image src={imagePreview} alt="Vista previa" width={48} height={48} className="h-full w-full object-cover" />
                           ) : (
                             <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />

@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
     // Return the response from the backend
     return NextResponse.json(response.data);
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error forwarding image upload:', error);
-    
+
     // In development mode, return a fallback
     if (process.env.NODE_ENV === 'development') {
       return NextResponse.json({
@@ -49,9 +49,16 @@ export async function POST(request: NextRequest) {
         message: 'Image upload fallback (development only)'
       });
     }
-    
+
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Error uploading image' },
+      { error: 'Error uploading image' },
       { status: 500 }
     );
   }
