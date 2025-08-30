@@ -10,7 +10,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 30000, // 30 seconds timeout for cold starts
 });
 
 // Interceptor para añadir el token a las peticiones
@@ -35,6 +35,12 @@ api.interceptors.response.use(
     // Cualquier código de estado que esté fuera del rango de 2xx causa la ejecución de esta función
     console.error("API Error:", error);
     
+    if (error.code === 'ECONNABORTED') {
+      // Error de timeout - no mostrar toast para evitar spam
+      console.error('Timeout error - request took too long');
+      return Promise.reject(error);
+    }
+    
     if (error.response) {
       // La solicitud se hizo y el servidor respondió con un código de estado
       // que cae fuera del rango 2xx
@@ -53,10 +59,11 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       // La solicitud se hizo pero no se recibió respuesta
-      toast.error('No se pudo conectar con el servidor');
+      console.error('No response received from server');
+      // No mostrar toast para evitar spam en timeouts
     } else {
       // Algo sucedió en la configuración de la solicitud que desencadenó un error
-      toast.error('Error al procesar la solicitud');
+      console.error('Request configuration error');
     }
     
     return Promise.reject(error);
@@ -108,8 +115,12 @@ export const productService = {
     try {
       const response = await api.get('/products');
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al obtener productos:', error);
+      if (error.code === 'ECONNABORTED') {
+        console.warn('Timeout al obtener productos - usando datos de muestra');
+        return null; // Retorna null para que use datos de muestra
+      }
       throw error;
     }
   },
@@ -250,8 +261,12 @@ export const categoryService = {
     try {
       const response = await api.get('/categories');
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al obtener categorías:', error);
+      if (error.code === 'ECONNABORTED') {
+        console.warn('Timeout al obtener categorías - usando datos de muestra');
+        return null; // Retorna null para que use datos de muestra
+      }
       throw error;
     }
   },

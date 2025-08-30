@@ -116,16 +116,39 @@ export default function Productos() {
       
       try {
         // Cargar categorías primero
-        const categoriasData = await categoryService.getCategories();
+        let categoriasData;
+        try {
+          categoriasData = await categoryService.getCategories();
+        } catch (error: any) {
+          console.error('Error al cargar categorías:', error);
+          if (error.code === 'ECONNABORTED') {
+            console.warn('Timeout al cargar categorías - usando datos de muestra');
+            categoriasData = null;
+          } else {
+            throw error;
+          }
+        }
+        
         if (categoriasData && Array.isArray(categoriasData)) {
           setCategorias(categoriasData);
         } else {
-          console.warn("El formato de las categorías recibidas no es válido");
-          setCategorias([]);
+          console.warn("Usando categorías de muestra");
+          setCategorias(sampleCategories);
         }
         
         // Cargar productos
-        const productsData = await productService.getProducts();
+        let productsData;
+        try {
+          productsData = await productService.getProducts();
+        } catch (error: any) {
+          console.error('Error al cargar productos:', error);
+          if (error.code === 'ECONNABORTED') {
+            console.warn('Timeout al cargar productos - usando datos de muestra');
+            productsData = null;
+          } else {
+            throw error;
+          }
+        }
         
         // Verificar si los datos son válidos
         if (productsData && Array.isArray(productsData)) {
@@ -142,40 +165,22 @@ export default function Productos() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-700">Usando datos de productos de muestra</p>
+                  <p className="text-sm text-yellow-700">
+                    {productsData === null ? 'Timeout al cargar productos - usando datos de muestra' : 'Usando datos de productos de muestra'}
+                  </p>
                 </div>
               </div>
             </div>
           ), { id: 'sample-products-warning', duration: 5000 });
         }
         
-        // Intentar cargar categorías desde la API
-        const categoriesData = await categoryService.getCategories();
-        
-        // Verificar si los datos son válidos
-        if (categoriesData && Array.isArray(categoriesData) && categoriesData.length > 0) {
-          setCategorias(categoriesData);
-        } else {
-          // Si no hay datos o no son válidos, usar datos de muestra
-          setCategorias(sampleCategories);
-          toast.custom(() => (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-md">
-              <div className="flex items-center">
-                <div className="text-yellow-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-yellow-700">Usando datos de categorías de muestra</p>
-                </div>
-              </div>
-            </div>
-          ), { id: 'sample-categories-warning', duration: 5000 });
-        }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error al cargar datos:', error);
-        setError('Error al cargar datos. Utilizando datos de muestra.');
+        
+        // Solo mostrar error si no es timeout
+        if (error.code !== 'ECONNABORTED') {
+          setError('Error al cargar datos. Utilizando datos de muestra.');
+        }
         
         // En caso de error, usar datos de muestra
         setProductos(sampleProducts);
@@ -186,7 +191,7 @@ export default function Productos() {
     };
     
     loadData();
-  }, [sampleProducts, sampleCategories]);
+  }, []);
   
   // Filtrar productos por categoría y búsqueda
   const productosFiltrados = productos.filter(producto => {
