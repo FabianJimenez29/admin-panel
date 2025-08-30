@@ -10,8 +10,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  // Configuración adicional para asegurar que se manejen los CORS correctamente
-  withCredentials: false,
   timeout: 10000, // 10 seconds timeout
 });
 
@@ -162,30 +160,9 @@ export const productService = {
   
   deleteProduct: async (id: string) => {
     try {
-      // Intentar primero con la configuración normal
       const response = await api.delete(`/products/${id}`);
       return response.data;
     } catch (error: any) {
-      // Si falla por CORS, intentar con una petición directa
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        console.log('Intentando petición DELETE directa...');
-        try {
-          const response = await axios({
-            method: 'DELETE',
-            url: `${API_URL}/products/${id}`,
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            withCredentials: false,
-            timeout: 15000,
-          });
-          return response.data;
-        } catch (directError) {
-          console.error(`Error en petición directa para eliminar producto con id ${id}:`, directError);
-          throw directError;
-        }
-      }
       console.error(`Error al eliminar producto con id ${id}:`, error);
       throw error;
     }
@@ -206,7 +183,6 @@ export const productService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        withCredentials: false,
         // Add a longer timeout for file uploads
         timeout: 30000,
       });
