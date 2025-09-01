@@ -107,7 +107,15 @@ export default function Admins() {
     try {
       if (editingAdmin) {
         // Actualizar administrador
-        const updateData: any = {
+        const updateData: {
+          nombre: string;
+          email: string;
+          telefono: string;
+          provincia: string;
+          canton: string;
+          distrito: string;
+          password?: string;
+        } = {
           nombre: formData.nombre,
           email: formData.email,
           telefono: formData.telefono,
@@ -136,9 +144,10 @@ export default function Admins() {
       
       closeModal();
       loadAdmins(); // Recargar la lista
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error guardando administrador:', error);
-      alert(error.response?.data?.error || 'Error guardando administrador');
+      const errorMessage = error instanceof Error ? error.message : 'Error guardando administrador';
+      alert(errorMessage);
     }
   };
 
@@ -149,9 +158,10 @@ export default function Admins() {
         await adminService.deleteAdmin(admin.id);
         alert('Administrador eliminado exitosamente');
         loadAdmins(); // Recargar la lista
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error eliminando administrador:', error);
-        alert(error.response?.data?.error || 'Error eliminando administrador');
+        const errorMessage = error instanceof Error ? error.message : 'Error eliminando administrador';
+        alert(errorMessage);
       }
     }
   };
