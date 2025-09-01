@@ -339,7 +339,7 @@ export default function Citas() {
                       id="status"
                       value={updateData.status}
                       onChange={(e) => setUpdateData({...updateData, status: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                     >
                       <option value="pendiente">Pendiente</option>
                       <option value="confirmada">Confirmada</option>
@@ -355,7 +355,7 @@ export default function Citas() {
                       id="tecnico"
                       value={updateData.tecnico}
                       onChange={(e) => setUpdateData({...updateData, tecnico: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       placeholder="Nombre del técnico"
                     />
                   </div>
@@ -366,7 +366,7 @@ export default function Citas() {
                       rows={3}
                       value={updateData.observaciones}
                       onChange={(e) => setUpdateData({...updateData, observaciones: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       placeholder="Observaciones sobre la cita"
                     ></textarea>
                   </div>

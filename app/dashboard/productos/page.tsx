@@ -630,7 +630,7 @@ export default function Productos() {
                 <input
                   type="text"
                   placeholder="Buscar producto..."
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2"
+                  className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 text-gray-900"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
@@ -734,7 +734,7 @@ export default function Productos() {
                         value={productForm.name}
                         onChange={handleProductFormChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       />
                     </div>
                     
@@ -746,7 +746,7 @@ export default function Productos() {
                         rows={3}
                         value={productForm.description}
                         onChange={handleProductFormChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       ></textarea>
                     </div>
                     
@@ -766,7 +766,7 @@ export default function Productos() {
                             value={productForm.price}
                             onChange={handleProductFormChange}
                             required
-                            className="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                           />
                         </div>
                       </div>
@@ -781,7 +781,7 @@ export default function Productos() {
                           value={productForm.stock}
                           onChange={handleProductFormChange}
                           required
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                         />
                       </div>
                     </div>
@@ -793,7 +793,7 @@ export default function Productos() {
                         name="category_id"
                         value={productForm.category_id}
                         onChange={handleProductFormChange}
-                        className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       >
                         <option value="">Sin categoría</option>
                         {categorias.map(category => (
@@ -892,7 +892,7 @@ export default function Productos() {
                         value={categoryForm.name}
                         onChange={handleCategoryFormChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       />
                     </div>
                     
@@ -904,7 +904,7 @@ export default function Productos() {
                         rows={3}
                         value={categoryForm.description}
                         onChange={handleCategoryFormChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       ></textarea>
                     </div>
                   </div>

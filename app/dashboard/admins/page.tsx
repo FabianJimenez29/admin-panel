@@ -197,7 +197,7 @@ export default function Admins() {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex gap-2">
             <select
-              className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2"
+              className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 text-gray-900"
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value)}
             >
@@ -210,7 +210,7 @@ export default function Admins() {
             <input
               type="text"
               placeholder="Buscar por nombre o email..."
-              className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2"
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 text-gray-900"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -315,7 +315,7 @@ export default function Admins() {
                     <input
                       type="text"
                       required
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.nombre}
                       onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                     />
@@ -325,7 +325,7 @@ export default function Admins() {
                     <input
                       type="email"
                       required
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                     />
@@ -336,7 +336,7 @@ export default function Admins() {
                     </label>
                     <input
                       type="password"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
                     />
@@ -345,7 +345,7 @@ export default function Admins() {
                     <label className="block text-sm font-medium text-gray-700">Teléfono</label>
                     <input
                       type="text"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.telefono}
                       onChange={(e) => setFormData({...formData, telefono: e.target.value})}
                     />
@@ -354,7 +354,7 @@ export default function Admins() {
                     <label className="block text-sm font-medium text-gray-700">Provincia</label>
                     <input
                       type="text"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.provincia}
                       onChange={(e) => setFormData({...formData, provincia: e.target.value})}
                     />
@@ -363,7 +363,7 @@ export default function Admins() {
                     <label className="block text-sm font-medium text-gray-700">Cantón</label>
                     <input
                       type="text"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.canton}
                       onChange={(e) => setFormData({...formData, canton: e.target.value})}
                     />
@@ -372,7 +372,7 @@ export default function Admins() {
                     <label className="block text-sm font-medium text-gray-700">Distrito</label>
                     <input
                       type="text"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 text-gray-900"
                       value={formData.distrito}
                       onChange={(e) => setFormData({...formData, distrito: e.target.value})}
                     />
