@@ -322,7 +322,7 @@ export const categoryService = {
 export const adminService = {
   getAdmins: async () => {
     try {
-      const response = await api.get('/admins');
+      const response = await api.get('/users');
       return response.data;
     } catch (error) {
       console.error('Error al obtener administradores:', error);
@@ -340,7 +340,7 @@ export const adminService = {
     distrito?: string;
   }) => {
     try {
-      const response = await api.post('/admins', adminData);
+      const response = await api.post('/users', adminData);
       return response.data;
     } catch (error) {
       console.error('Error al crear administrador:', error);
@@ -358,7 +358,7 @@ export const adminService = {
     distrito?: string;
   }) => {
     try {
-      const response = await api.put(`/admins?id=${id}`, adminData);
+      const response = await api.put(`/users?id=${id}`, adminData);
       return response.data;
     } catch (error) {
       console.error('Error al actualizar administrador:', error);
@@ -368,7 +368,7 @@ export const adminService = {
   
   deleteAdmin: async (id: number) => {
     try {
-      const response = await api.delete(`/admins?id=${id}`);
+      const response = await api.delete(`/users?id=${id}`);
       return response.data;
     } catch (error) {
       console.error('Error al eliminar administrador:', error);
