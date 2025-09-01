@@ -171,9 +171,12 @@ export const productService = {
   
   deleteProduct: async (id: string) => {
     try {
-      const response = await api.delete(`/products/${id}`);
+      // Usar endpoint específico para eliminación
+      const response = await api.delete('/delete-product', {
+        data: { id: id }
+      });
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error al eliminar producto con id ${id}:`, error);
       throw error;
     }
