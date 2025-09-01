@@ -300,7 +300,7 @@ export const categoryService = {
     description?: string;
   }) => {
     try {
-      const response = await api.put(`/categories/${id}`, categoryData);
+      const response = await api.put(`/categories?id=${id}`, categoryData);
       return response.data;
     } catch (error) {
       console.error(`Error al actualizar categoría con id ${id}:`, error);
@@ -310,7 +310,7 @@ export const categoryService = {
   
   deleteCategory: async (id: string) => {
     try {
-      const response = await api.delete(`/categories/${id}`);
+      const response = await api.delete(`/categories?id=${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error al eliminar categoría con id ${id}:`, error);
