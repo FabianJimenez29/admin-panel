@@ -321,18 +321,31 @@ export const categoryService = {
 
 export const adminService = {
   getAdmins: async () => {
-    const response = await api.get('/admins');
-    return response.data;
+    try {
+      const response = await api.get('/admins');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener administradores:', error);
+      throw error;
+    }
   },
   
   createAdmin: async (adminData: {
     nombre: string;
     email: string;
     password: string;
-    telefono: string;
+    telefono?: string;
+    provincia?: string;
+    canton?: string;
+    distrito?: string;
   }) => {
-    const response = await api.post('/admins', adminData);
-    return response.data;
+    try {
+      const response = await api.post('/admins', adminData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear administrador:', error);
+      throw error;
+    }
   },
   
   updateAdmin: async (id: number, adminData: {
@@ -340,14 +353,27 @@ export const adminService = {
     email?: string;
     password?: string;
     telefono?: string;
+    provincia?: string;
+    canton?: string;
+    distrito?: string;
   }) => {
-    const response = await api.put(`/admins/${id}`, adminData);
-    return response.data;
+    try {
+      const response = await api.put(`/admins?id=${id}`, adminData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar administrador:', error);
+      throw error;
+    }
   },
   
   deleteAdmin: async (id: number) => {
-    const response = await api.delete(`/admins/${id}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/admins?id=${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al eliminar administrador:', error);
+      throw error;
+    }
   },
 };
 

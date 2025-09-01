@@ -22,6 +22,20 @@ export type Product = {
   category?: Category;
 };
 
+// Tipo para administradores
+export type Admin = {
+  id: number;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  rol: string;
+  provincia?: string;
+  canton?: string;
+  distrito?: string;
+  fechaCreacion?: string;
+  activo: boolean;
+};
+
 // Tipo para citas
 export type Cita = {
   id: number;
