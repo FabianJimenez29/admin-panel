@@ -91,8 +91,7 @@ export default function Productos() {
     price: '',
     stock: '',
     category_id: '',
-    image_url: '',
-    image_path: '' // Almacenar la ruta de la imagen en Supabase
+    image_url: ''
   });
   
   const [categoryForm, setCategoryForm] = useState({
@@ -220,8 +219,7 @@ export default function Productos() {
         price: product.price.toString(),
         stock: product.stock.toString(),
         category_id: product.category_id || '',
-        image_url: product.image_url || '',
-        image_path: product.image_path || '' // Puede ser undefined en productos existentes
+        image_url: product.image_url || ''
       });
       if (product.image_url) {
         setImagePreview(product.image_url);
@@ -234,8 +232,7 @@ export default function Productos() {
         price: '',
         stock: '',
         category_id: '',
-        image_url: '',
-        image_path: ''
+        image_url: ''
       });
       setImagePreview(null);
     }
@@ -312,29 +309,12 @@ export default function Productos() {
             return;
           }
           
-          // Si estamos actualizando un producto y ya tiene una imagen, eliminar la anterior
-          if (editingProduct && editingProduct.image_path && productForm.image_path) {
-            try {
-              await productService.deleteProductImage(productForm.image_path);
-              console.log('Imagen anterior eliminada correctamente');
-            } catch (error) {
-              console.error('Error al eliminar imagen anterior:', error);
-              // No bloqueamos el proceso si falla la eliminación de la imagen anterior
-            }
-          }
-          
           toast.loading('Subiendo imagen...', { id: 'uploading' });
           try {
             const uploadResult = await productService.uploadProductImage(selectedImage);
             
             if (uploadResult && uploadResult.url) {
               imageUrl = uploadResult.url; // Usar la URL devuelta por la API
-              
-              // Guardar la ruta de la imagen para posibles operaciones futuras
-              if (uploadResult.path) {
-                productForm.image_path = uploadResult.path;
-              }
-              
               toast.success('Imagen subida correctamente', { id: 'uploading' });
               console.log('Imagen subida exitosamente:', uploadResult);
             } else {
@@ -350,7 +330,6 @@ export default function Productos() {
             // En desarrollo, usar una imagen de muestra
             if (process.env.NODE_ENV === 'development') {
               imageUrl = `https://picsum.photos/id/${Math.floor(Math.random() * 1000)}/300/300`;
-              productForm.image_path = 'sample/image.jpg';
             } else {
               setSaving(false);
               return;
@@ -395,8 +374,7 @@ export default function Productos() {
         price: '',
         stock: '',
         category_id: '',
-        image_url: '',
-        image_path: ''
+        image_url: ''
       });
       setSelectedImage(null);
       setImagePreview(null);
@@ -853,23 +831,10 @@ export default function Productos() {
                           <button
                             type="button"
                             onClick={async () => {
-                              // Si hay una ruta de imagen en Supabase, intentar eliminarla
-                              if (productForm.image_path) {
-                                try {
-                                  toast.loading('Eliminando imagen...', { id: 'deleting-image' });
-                                  await productService.deleteProductImage(productForm.image_path);
-                                  toast.success('Imagen eliminada correctamente', { id: 'deleting-image' });
-                                } catch (error) {
-                                  console.error('Error al eliminar imagen de Supabase:', error);
-                                  toast.error('Error al eliminar la imagen del servidor', { id: 'deleting-image' });
-                                }
-                              }
-                              
                               // Limpiar la imagen localmente
                               setProductForm(prev => ({ 
                                 ...prev, 
-                                image_url: '',
-                                image_path: '' 
+                                image_url: ''
                               }));
                               setImagePreview(null);
                               setSelectedImage(null);
