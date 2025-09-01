@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import { useState } from 'react';
 
 export default function Admins() {
-  const [admins, setAdmins] = useState([
+  const [admins] = useState([
     {
       id: 1,
       nombre: 'Carlos Rodríguez',

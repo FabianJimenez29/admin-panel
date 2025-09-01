@@ -7,6 +7,64 @@ import { productService, categoryService } from '@/services/api';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
+// Datos de muestra para usar cuando la API no está disponible
+const sampleProducts: Product[] = [
+  {
+    id: '1',
+    name: 'Proteína Whey 1kg',
+    description: 'Proteína de suero de alta calidad para deportistas',
+    price: 49.99,
+    stock: 25,
+    category_id: '1',
+    image_url: 'https://images.unsplash.com/photo-1593095948071-474c5cc2589d?q=80&w=200&auto=format'
+  },
+  {
+    id: '2',
+    name: 'Mancuernas 5kg (par)',
+    description: 'Par de mancuernas para entrenamiento de fuerza',
+    price: 35.50,
+    stock: 12,
+    category_id: '2',
+    image_url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=200&auto=format'
+  },
+  {
+    id: '3',
+    name: 'Cuerda para saltar',
+    description: 'Cuerda para entrenamiento cardiovascular',
+    price: 15.99,
+    stock: 30,
+    category_id: '3',
+    image_url: 'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?q=80&w=200&auto=format'
+  },
+  {
+    id: '4',
+    name: 'Guantes de entrenamiento',
+    description: 'Guantes para proteger las manos durante el entrenamiento',
+    price: 22.50,
+    stock: 15,
+    category_id: '3',
+    image_url: 'https://images.unsplash.com/photo-1516846235361-7a332bc5664c?q=80&w=200&auto=format'
+  }
+];
+
+const sampleCategories: Category[] = [
+  {
+    id: '1',
+    name: 'Suplementos',
+    description: 'Productos para nutrición deportiva'
+  },
+  {
+    id: '2',
+    name: 'Equipamiento',
+    description: 'Equipamiento para gimnasio'
+  },
+  {
+    id: '3',
+    name: 'Accesorios',
+    description: 'Accesorios para entrenamiento'
+  }
+];
+
 export default function Productos() {
   // Estado para productos y categorías
   const [productos, setProductos] = useState<Product[]>([]);
@@ -50,67 +108,10 @@ export default function Productos() {
   const [saving, setSaving] = useState<boolean>(false);
   const [showCategoriesSection, setShowCategoriesSection] = useState<boolean>(false);
   
-  // Datos de muestra para usar cuando la API no está disponible
-  const sampleProducts: Product[] = [
-    {
-      id: '1',
-      name: 'Proteína Whey 1kg',
-      description: 'Proteína de suero de alta calidad para deportistas',
-      price: 49.99,
-      stock: 25,
-      category_id: '1',
-      image_url: 'https://images.unsplash.com/photo-1593095948071-474c5cc2589d?q=80&w=200&auto=format'
-    },
-    {
-      id: '2',
-      name: 'Mancuernas 5kg (par)',
-      description: 'Par de mancuernas para entrenamiento de fuerza',
-      price: 35.50,
-      stock: 12,
-      category_id: '2',
-      image_url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=200&auto=format'
-    },
-    {
-      id: '3',
-      name: 'Cuerda para saltar',
-      description: 'Cuerda para entrenamiento cardiovascular',
-      price: 15.99,
-      stock: 30,
-      category_id: '3',
-      image_url: 'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?q=80&w=200&auto=format'
-    },
-    {
-      id: '4',
-      name: 'Guantes de entrenamiento',
-      description: 'Guantes para proteger las manos durante el entrenamiento',
-      price: 22.50,
-      stock: 15,
-      category_id: '3',
-      image_url: 'https://images.unsplash.com/photo-1516846235361-7a332bc5664c?q=80&w=200&auto=format'
-    }
-  ];
-  
-  const sampleCategories: Category[] = [
-    {
-      id: '1',
-      name: 'Suplementos',
-      description: 'Productos para nutrición deportiva'
-    },
-    {
-      id: '2',
-      name: 'Equipamiento',
-      description: 'Equipamiento para gimnasio'
-    },
-    {
-      id: '3',
-      name: 'Accesorios',
-      description: 'Accesorios para entrenamiento'
-    }
-  ];
-  
     // Cargar productos y categorías al montar el componente
   useEffect(() => {
     const loadData = async () => {
+      console.log('🚀 Iniciando carga de datos...');
       setLoading(true);
       setError(null);
       
@@ -118,11 +119,13 @@ export default function Productos() {
         // Cargar categorías primero
         let categoriasData;
         try {
+          console.log('📂 Cargando categorías...');
           categoriasData = await categoryService.getCategories();
-        } catch (error: any) {
-          console.error('Error al cargar categorías:', error);
-          if (error.code === 'ECONNABORTED') {
-            console.warn('Timeout al cargar categorías - usando datos de muestra');
+          console.log('✅ Categorías obtenidas:', categoriasData);
+        } catch (error: unknown) {
+          console.error('❌ Error al cargar categorías:', error);
+          if (error instanceof Error && 'code' in error && error.code === 'ECONNABORTED') {
+            console.warn('⏰ Timeout al cargar categorías - usando datos de muestra');
             categoriasData = null;
           } else {
             throw error;
@@ -131,19 +134,22 @@ export default function Productos() {
         
         if (categoriasData && Array.isArray(categoriasData)) {
           setCategorias(categoriasData);
+          console.log('✅ Categorías establecidas en estado');
         } else {
-          console.warn("Usando categorías de muestra");
+          console.warn("⚠️ Usando categorías de muestra");
           setCategorias(sampleCategories);
         }
         
         // Cargar productos
         let productsData;
         try {
+          console.log('📦 Cargando productos...');
           productsData = await productService.getProducts();
-        } catch (error: any) {
-          console.error('Error al cargar productos:', error);
-          if (error.code === 'ECONNABORTED') {
-            console.warn('Timeout al cargar productos - usando datos de muestra');
+          console.log('✅ Productos obtenidos:', productsData);
+        } catch (error: unknown) {
+          console.error('❌ Error al cargar productos:', error);
+          if (error instanceof Error && 'code' in error && error.code === 'ECONNABORTED') {
+            console.warn('⏰ Timeout al cargar productos - usando datos de muestra');
             productsData = null;
           } else {
             throw error;
@@ -153,8 +159,10 @@ export default function Productos() {
         // Verificar si los datos son válidos
         if (productsData && Array.isArray(productsData)) {
           setProductos(productsData);
+          console.log('✅ Productos establecidos en estado:', productsData.length, 'productos');
         } else {
           // Si no hay datos o no son válidos, usar datos de muestra
+          console.warn('⚠️ Usando productos de muestra');
           setProductos(sampleProducts);
           toast.custom(() => (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-md">
@@ -174,24 +182,26 @@ export default function Productos() {
           ), { id: 'sample-products-warning', duration: 5000 });
         }
         
-      } catch (error: any) {
-        console.error('Error al cargar datos:', error);
+      } catch (error: unknown) {
+        console.error('💥 Error general al cargar datos:', error);
         
         // Solo mostrar error si no es timeout
-        if (error.code !== 'ECONNABORTED') {
+        if (error instanceof Error && 'code' in error && error.code !== 'ECONNABORTED') {
           setError('Error al cargar datos. Utilizando datos de muestra.');
         }
         
         // En caso de error, usar datos de muestra
+        console.warn('⚠️ Usando datos de muestra por error');
         setProductos(sampleProducts);
         setCategorias(sampleCategories);
       } finally {
         setLoading(false);
+        console.log('🏁 Carga de datos completada');
       }
     };
     
     loadData();
-  }, []);
+  }, []); // Sin dependencias para evitar loops infinitos
   
   // Filtrar productos por categoría y búsqueda
   const productosFiltrados = productos.filter(producto => {

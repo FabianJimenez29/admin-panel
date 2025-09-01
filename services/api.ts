@@ -115,9 +115,9 @@ export const productService = {
     try {
       const response = await api.get('/products');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al obtener productos:', error);
-      if (error.code === 'ECONNABORTED') {
+      if (error instanceof Error && 'code' in error && error.code === 'ECONNABORTED') {
         console.warn('Timeout al obtener productos - usando datos de muestra');
         return null; // Retorna null para que use datos de muestra
       }
@@ -261,9 +261,9 @@ export const categoryService = {
     try {
       const response = await api.get('/categories');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al obtener categorías:', error);
-      if (error.code === 'ECONNABORTED') {
+      if (error instanceof Error && 'code' in error && error.code === 'ECONNABORTED') {
         console.warn('Timeout al obtener categorías - usando datos de muestra');
         return null; // Retorna null para que use datos de muestra
       }

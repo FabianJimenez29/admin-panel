@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { authService } from '@/services/api';
 import { useAuthStore } from '@/store/auth';
 
 export default function LoginPage() {
