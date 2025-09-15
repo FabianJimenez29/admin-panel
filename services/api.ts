@@ -195,6 +195,7 @@ export const productService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        withCredentials: true,
         // Add a longer timeout for file uploads
         timeout: 30000,
       });
