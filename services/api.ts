@@ -183,7 +183,7 @@ export const productService = {
   uploadProductImage: async (imageFile: File) => {
     try {
       // Usar la URL específica para subir imágenes definida en .env
-      const uploadUrl = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_URL || `${API_URL}/products/upload-image`;
+      const uploadUrl = `${API_URL}/products/upload-image`;
       
       console.log('Uploading image to:', uploadUrl);
       
