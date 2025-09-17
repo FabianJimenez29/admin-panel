@@ -182,7 +182,6 @@ export const productService = {
 
   uploadProductImage: async (imageFile: File) => {
     try {
-      // Usar la URL específica para subir imágenes definida en .env
       const uploadUrl = `${API_URL}/products/upload-image`;
       
       console.log('Uploading image to:', uploadUrl);
@@ -190,22 +189,18 @@ export const productService = {
       const formData = new FormData();
       formData.append('image', imageFile);
       
-      // Use a direct Axios instance for this request with specific CORS settings
       const response = await axios.post(uploadUrl, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
-        // Add a longer timeout for file uploads
         timeout: 30000,
       });
       
-      // Handle both formats of responses (for backward compatibility)
       if (!response.data && response.data.url === undefined) {
         throw new Error('El servidor no devolvió una URL para la imagen');
       }
       
-      // If image upload fails, provide a fallback (for demo/development purposes)
       if (process.env.NODE_ENV === 'development' && !response.data.url) {
         console.warn('Usando URL de imagen de muestra para desarrollo');
         return {
