@@ -7,7 +7,6 @@ import { productService, categoryService } from '@/services/api';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
-// Datos de muestra para usar cuando la API no está disponible
 const sampleProducts: Product[] = [
   {
     id: '1',
