@@ -1,7 +1,6 @@
 "use client";
 
 import Navbar from '@/components/Navbar';
-import EnvDebug from '@/components/EnvDebug';
 import { useState, useEffect } from 'react';
 import { Product, Category } from '@/types';
 import { productService, categoryService } from '@/services/api';
@@ -502,7 +501,6 @@ export default function Productos() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <EnvDebug />
       <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Cabecera con botones de acción */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
