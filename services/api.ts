@@ -163,7 +163,8 @@ export const productService = {
     image_path?: string;
   }) => {
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      // Usar query parameter para el ID
+      const response = await api.put(`/products?id=${id}`, productData);
       return response.data;
     } catch (error) {
       console.error(`Error al actualizar producto con id ${id}:`, error);
@@ -173,8 +174,8 @@ export const productService = {
   
   deleteProduct: async (id: string) => {
     try {
-      // Usar la ruta con ID dinámico
-      const response = await api.delete(`/products/${id}`);
+      // Usar query parameter para el ID
+      const response = await api.delete(`/products?id=${id}`);
       return response.data;
     } catch (error: unknown) {
       console.error(`Error al eliminar producto con id ${id}:`, error);
