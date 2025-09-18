@@ -10,32 +10,6 @@ export interface ImageUploadResult {
 
 export const imageService = {
   /**
-   * Test para verificar que el bucket existe y es accesible
-   */
-  testBucket: async (): Promise<void> => {
-    try {
-      console.log('🧪 Probando acceso al bucket product-images...');
-      
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .list('products', {
-          limit: 1,
-        });
-
-      if (error) {
-        console.error('❌ Error al acceder al bucket:', error);
-        throw new Error(`Error al acceder al bucket: ${error.message}`);
-      }
-
-      console.log('✅ Bucket accesible. Archivos encontrados:', data?.length || 0);
-      
-    } catch (error) {
-      console.error('💥 Error en testBucket:', error);
-      throw error;
-    }
-  },
-
-  /**
    * Sube una imagen directamente al bucket 'product-images' de Supabase
    */
   uploadProductImage: async (file: File): Promise<ImageUploadResult> => {
@@ -88,16 +62,10 @@ export const imageService = {
 
       console.log('✅ Archivo subido exitosamente:', data);
 
-      // Obtener URL pública
+      // Obtener URL pública (bucket público)
       const { data: publicUrlData } = supabase.storage
         .from('product-images')
         .getPublicUrl(filePath);
-
-      console.log('🔗 Debug URL generada:', {
-        filePath,
-        publicUrlData,
-        fullUrl: publicUrlData?.publicUrl
-      });
 
       if (!publicUrlData?.publicUrl) {
         throw new Error('No se pudo obtener la URL pública de la imagen');
