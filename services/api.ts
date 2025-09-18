@@ -184,9 +184,15 @@ export const productService = {
 
   uploadProductImage: async (imageFile: File) => {
     try {
-      // Importación dinámica para evitar problemas en build
+      // Importación dinámica para evitar problemas en build time
       const { imageService } = await import('./imageService');
+      
+      // Usar el servicio de imagen de Supabase directamente
       const result = await imageService.uploadProductImage(imageFile);
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Error al subir imagen');
+      }
       
       return {
         url: result.url,
@@ -201,9 +207,15 @@ export const productService = {
   
   deleteProductImage: async (imagePath: string) => {
     try {
-      // Importación dinámica para evitar problemas en build
+      // Importación dinámica para evitar problemas en build time
       const { imageService } = await import('./imageService');
+      
+      // Usar el servicio de imagen de Supabase directamente
       const result = await imageService.deleteProductImage(imagePath);
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Error al eliminar imagen');
+      }
       
       return result;
     } catch (error) {

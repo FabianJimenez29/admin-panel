@@ -1,22 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+// Usando los datos del .env temporalmente como prueba
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bazixgggnwpswkxwaete.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheml4Z2dnbndwc3dreHdhZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NjEzODEsImV4cCI6MjA3MTUzNzM4MX0.VwA5elZYp_YreG7oo68eaf83UaNhtwQMTugAd8D9cTo'
 
-export const getSupabaseClient = () => {
-  if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+console.log('Supabase URL configured:', supabaseUrl ? 'Yes' : 'No')
+console.log('Supabase Anon Key configured:', supabaseAnonKey ? 'Yes' : 'No')
+console.log('Environment URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.warn('Supabase environment variables not found');
-      return null;
-    }
-
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  
-  return supabaseClient;
-};
-
-// Export legacy client for backward compatibility
-export const supabase = getSupabaseClient();
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
