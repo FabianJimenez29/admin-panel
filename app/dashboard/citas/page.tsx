@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import {
   Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { appointmentService } from '@/services/api';
 
 type Cita = {
   id: number;
@@ -54,55 +55,16 @@ type Cita = {
   reparaciones_list?: string;
 };
 
-// Sample data
-const sampleCitas: Cita[] = [
-  {
-    id: 1,
-    client_name: 'Juan Pérez',
-    client_email: 'juan@email.com',
-    client_phone: '88887777',
-    client_provincia: 'San José',
-    client_canton: 'Central',
-    client_distrito: 'Carmen',
-    sucursal: 'San José Centro',
-    servicio: 'Mantenimiento General',
-    fecha: '2024-01-15',
-    hora: '09:00',
-    tipo_placa: 'Normal',
-    numero_placa: 'ABC123',
-    marca: 'Toyota',
-    modelo: 'Corolla',
-    problema: 'Revisión general',
-    status: 'Pendiente',
-    tecnico: 'Carlos López',
-    observaciones: 'Cliente regular'
-  },
-  {
-    id: 2,
-    client_name: 'María González',
-    client_email: 'maria@email.com',
-    client_phone: '77776666',
-    sucursal: 'Cartago',
-    servicio: 'Reparación Motor',
-    fecha: '2024-01-15',
-    hora: '14:00',
-    numero_placa: 'XYZ789',
-    marca: 'Honda',
-    modelo: 'Civic',
-    problema: 'Ruido extraño en motor',
-    status: 'En Proceso',
-    tecnico: 'Ana Rodríguez'
-  },
-];
-
 export default function CitasPage() {
-  const [citas, setCitas] = useState<Cita[]>(sampleCitas);
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [statusFilter, setStatusFilter] = useState('Todas');
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [updateData, setUpdateData] = useState({
     status: '',
     tecnico: '',
@@ -111,6 +73,24 @@ export default function CitasPage() {
 
   const statusOptions = ['Todas', 'Pendiente', 'Confirmada', 'En Proceso', 'Completada', 'Cancelada'];
   const tecnicos = ['Carlos López', 'Ana Rodríguez', 'Miguel Torres', 'Laura Sánchez'];
+
+  useEffect(() => {
+    loadAppointments();
+  }, [selectedDate]);
+
+  const loadAppointments = async () => {
+    try {
+      setLoading(true);
+      const data = await appointmentService.getAppointmentsByDate(selectedDate);
+      setCitas(data || []);
+    } catch (error) {
+      console.error('Error al cargar citas:', error);
+      toast.error('Error al cargar las citas');
+      setCitas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCitas = citas.filter(cita => {
     const matchesSearch = cita.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -170,7 +150,16 @@ export default function CitasPage() {
     if (!selectedCita) return;
 
     try {
-      // Mock update - replace with real API call
+      setUpdating(true);
+      
+      await appointmentService.updateAppointmentStatus(
+        selectedCita.id,
+        updateData.status,
+        updateData.tecnico,
+        updateData.observaciones
+      );
+      
+      // Actualizar la cita en el estado local
       setCitas(prev => prev.map(c => 
         c.id === selectedCita.id 
           ? { ...c, ...updateData }
@@ -179,8 +168,11 @@ export default function CitasPage() {
       
       setShowUpdateModal(false);
       toast.success('Cita actualizada exitosamente');
-    } catch {
+    } catch (error) {
+      console.error('Error al actualizar cita:', error);
       toast.error('Error al actualizar la cita');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -318,7 +310,18 @@ export default function CitasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  <span className="ml-2 text-gray-600">Cargando citas...</span>
+                </div>
+              ) : filteredCitas.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-500">No hay citas para la fecha seleccionada</p>
+                </div>
+              ) : (
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
@@ -396,6 +399,7 @@ export default function CitasPage() {
                   ))}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
 
@@ -593,8 +597,15 @@ export default function CitasPage() {
                 <Button variant="outline" onClick={() => setShowUpdateModal(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveUpdate}>
-                  Guardar Cambios
+                <Button onClick={handleSaveUpdate} disabled={updating}>
+                  {updating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar Cambios'
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>

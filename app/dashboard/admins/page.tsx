@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { adminService } from '@/services/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -42,46 +43,9 @@ type Admin = {
   rol?: string;
 };
 
-// Sample data
-const sampleAdmins: Admin[] = [
-  {
-    id: 1,
-    nombre: 'Super Admin',
-    email: 'admin@gymapp.com',
-    telefono: '88888888',
-    provincia: 'San José',
-    canton: 'Central',
-    distrito: 'Carmen',
-    activo: true,
-    created_at: '2024-01-01',
-    ultimo_acceso: '2024-01-15',
-    rol: 'Super Admin'
-  },
-  {
-    id: 2,
-    nombre: 'Carlos Administrador',
-    email: 'carlos@gymapp.com',
-    telefono: '77777777',
-    activo: true,
-    created_at: '2024-01-05',
-    ultimo_acceso: '2024-01-14',
-    rol: 'Admin'
-  },
-  {
-    id: 3,
-    nombre: 'María Supervisora',
-    email: 'maria@gymapp.com',
-    telefono: '66666666',
-    activo: false,
-    created_at: '2024-01-10',
-    ultimo_acceso: '2024-01-12',
-    rol: 'Moderador'
-  }
-];
-
 export default function AdminsPage() {
-  const [admins, setAdmins] = useState<Admin[]>(sampleAdmins);
-  const [loading, setLoading] = useState(false);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [roleFilter, setRoleFilter] = useState('Todos');
@@ -100,6 +64,32 @@ export default function AdminsPage() {
     distrito: '',
     rol: 'Admin'
   });
+
+  // Cargar administradores al montar el componente
+  useEffect(() => {
+    loadAdmins();
+  }, []);
+
+  const loadAdmins = async () => {
+    try {
+      setLoading(true);
+      console.log('🚀 Cargando administradores...');
+      const response = await adminService.getAdmins();
+      if (response.success && Array.isArray(response.data)) {
+        setAdmins(response.data);
+        console.log('✅ Administradores cargados:', response.data.length);
+      } else {
+        console.warn('⚠️ Respuesta inesperada del servidor:', response);
+        toast.error('Error al cargar administradores: respuesta inválida');
+      }
+    } catch (error) {
+      console.error('❌ Error cargando administradores:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al cargar administradores: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const statusOptions = ['Todos', 'Activo', 'Inactivo'];
   const roleOptions = ['Todos', 'Super Admin', 'Admin', 'Moderador'];
@@ -159,57 +149,93 @@ export default function AdminsPage() {
 
     setLoading(true);
     try {
-      // Mock save - replace with real API call
-      const newAdmin: Admin = {
-        id: editingAdmin?.id || Date.now(),
-        nombre: formData.nombre,
-        email: formData.email,
-        telefono: formData.telefono,
-        provincia: formData.provincia,
-        canton: formData.canton,
-        distrito: formData.distrito,
-        activo: true,
-        created_at: editingAdmin?.created_at || new Date().toISOString().slice(0, 10),
-        rol: formData.rol
-      };
-
       if (editingAdmin) {
-        setAdmins(prev => prev.map(a => a.id === editingAdmin.id ? newAdmin : a));
+        // Actualizar administrador existente
+        const updateData: any = {
+          nombre: formData.nombre,
+          email: formData.email,
+          telefono: formData.telefono,
+          provincia: formData.provincia,
+          canton: formData.canton,
+          distrito: formData.distrito
+        };
+        
+        // Solo incluir contraseña si se proporcionó una nueva
+        if (formData.password.trim()) {
+          updateData.password = formData.password;
+        }
+        
+        await adminService.updateAdmin(editingAdmin.id, updateData);
         toast.success('Administrador actualizado exitosamente');
+        loadAdmins(); // Recargar la lista
       } else {
-        setAdmins(prev => [...prev, newAdmin]);
+        // Crear nuevo administrador
+        await adminService.createAdmin(formData);
         toast.success('Administrador creado exitosamente');
+        loadAdmins(); // Recargar la lista
       }
 
       setShowCreateModal(false);
-    } catch {
-      toast.error('Error al guardar el administrador');
+      // Restablecer formulario
+      setFormData({
+        nombre: '',
+        email: '',
+        password: '',
+        telefono: '',
+        provincia: '',
+        canton: '',
+        distrito: '',
+        rol: 'Admin'
+      });
+    } catch (error) {
+      console.error('❌ Error al guardar administrador:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al guardar el administrador: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleStatus = async (adminId: number) => {
+    const adminToUpdate = admins.find(a => a.id === adminId);
+    if (!adminToUpdate) return;
+
     try {
+      // Aquí deberías usar la API para actualizar el estado
+      // Por ahora lo simularemos localmente hasta que exista la API
+      const updateData = {
+        ...adminToUpdate,
+        activo: !adminToUpdate.activo
+      };
+      
+      await adminService.updateAdmin(adminId, updateData);
       setAdmins(prev => prev.map(a => 
         a.id === adminId ? { ...a, activo: !a.activo } : a
       ));
-      toast.success('Estado del administrador actualizado');
-    } catch {
-      toast.error('Error al actualizar el estado');
+      toast.success(`Estado del administrador ${adminToUpdate.activo ? 'desactivado' : 'activado'}`);
+    } catch (error) {
+      console.error('❌ Error al actualizar estado:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al actualizar el estado: ${errorMessage}`);
     }
   };
 
   const handleDeleteAdmin = async (adminId: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este administrador?')) {
+    const adminToDelete = admins.find(a => a.id === adminId);
+    if (!adminToDelete) return;
+
+    if (!confirm(`¿Estás seguro de que quieres eliminar al administrador ${adminToDelete.nombre}?`)) {
       return;
     }
 
     try {
+      await adminService.deleteAdmin(adminId);
       setAdmins(prev => prev.filter(a => a.id !== adminId));
       toast.success('Administrador eliminado exitosamente');
-    } catch {
-      toast.error('Error al eliminar el administrador');
+    } catch (error) {
+      console.error('❌ Error al eliminar administrador:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al eliminar el administrador: ${errorMessage}`);
     }
   };
 
@@ -387,7 +413,32 @@ export default function AdminsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAdmins.map((admin) => (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <span className="ml-2">Cargando administradores...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredAdmins.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex flex-col items-center justify-center text-gray-500">
+                          <Users className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-lg font-medium">No hay administradores</p>
+                          <p className="text-sm">
+                            {searchTerm || statusFilter !== 'Todos' || roleFilter !== 'Todos'
+                              ? 'No se encontraron administradores con los filtros aplicados' 
+                              : 'Aún no hay administradores registrados en el sistema'
+                            }
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAdmins.map((admin) => (
                     <TableRow key={admin.id}>
                       <TableCell>
                         <div className="flex items-center">
@@ -469,7 +520,7 @@ export default function AdminsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )))}
                 </TableBody>
               </Table>
             </CardContent>

@@ -20,23 +20,63 @@ import {
   BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
+import { productService, appointmentService, adminService } from '@/services/api';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalAppointments: 0,
+    todayAppointments: 0,
+    totalAdmins: 0,
+    activeAdmins: 0
+  });
 
   useEffect(() => {
     setMounted(true);
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar datos en paralelo
+      const [products, appointments, admins] = await Promise.all([
+        productService.getProducts().catch(() => []),
+        appointmentService.getAppointments().catch(() => []),
+        adminService.getAdmins().catch(() => [])
+      ]);
+
+      // Calcular estadísticas
+      const today = new Date().toISOString().slice(0, 10);
+      const todayAppointments = appointments.filter((app: any) => app.fecha === today);
+      const activeAdmins = admins.filter((admin: any) => admin.active);
+
+      setStats({
+        totalProducts: products.length,
+        totalAppointments: appointments.length,
+        todayAppointments: todayAppointments.length,
+        totalAdmins: admins.length,
+        activeAdmins: activeAdmins.length
+      });
+    } catch (error) {
+      console.error('Error al cargar datos del dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!mounted) return null;
 
   // Mock data - en una app real esto vendría de la API
-  const stats = [
+  const getStatsCards = () => [
     {
       title: "Total Productos",
-      value: "245",
-      description: "12 agregados esta semana",
+      value: loading ? "..." : stats.totalProducts.toString(),
+      description: "Productos en catálogo",
       icon: Package,
       trend: "+12%",
       color: "text-blue-600",
@@ -44,8 +84,8 @@ export default function DashboardPage() {
     },
     {
       title: "Citas Programadas",
-      value: "89",
-      description: "23 para hoy",
+      value: loading ? "..." : stats.totalAppointments.toString(),
+      description: `${stats.todayAppointments} para hoy`,
       icon: Calendar,
       trend: "+8%",
       color: "text-green-600",
@@ -53,19 +93,19 @@ export default function DashboardPage() {
     },
     {
       title: "Administradores",
-      value: "12",
-      description: "2 activos ahora",
+      value: loading ? "..." : stats.totalAdmins.toString(),
+      description: `${stats.activeAdmins} activos`,
       icon: Users,
       trend: "+2",
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
     {
-      title: "Ventas del Mes",
-      value: "$24,580",
-      description: "15% más que el mes anterior",
+      title: "Sistema",
+      value: "Activo",
+      description: "Estado del sistema",
       icon: TrendingUp,
-      trend: "+15%",
+      trend: "99.9%",
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
@@ -146,7 +186,7 @@ export default function DashboardPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, index) => {
+            {getStatsCards().map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <Card key={index} className="hover:shadow-lg transition-shadow">

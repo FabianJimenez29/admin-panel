@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, Category } from '@/types';
+import { productService, categoryService } from '@/services/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -26,36 +27,9 @@ import {
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
-// Sample data - replace with real API calls
-const sampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Proteína Whey 1kg',
-    description: 'Proteína de suero de alta calidad para deportistas',
-    price: 49.99,
-    stock: 25,
-    category_id: '1',
-    image_url: 'https://images.unsplash.com/photo-1593095948071-474c5cc2589d?q=80&w=200&auto=format'
-  },
-  {
-    id: '2',
-    name: 'Mancuernas 5kg (par)',
-    description: 'Par de mancuernas para entrenamiento de fuerza',
-    price: 35.50,
-    stock: 12,
-    category_id: '2',
-    image_url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=200&auto=format'
-  },
-];
-
-const sampleCategories: Category[] = [
-  { id: '1', name: 'Suplementos', description: 'Productos nutricionales' },
-  { id: '2', name: 'Equipos', description: 'Equipos de ejercicio' },
-];
-
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
-  const [categories] = useState<Category[]>(sampleCategories);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -72,6 +46,46 @@ export default function ProductsPage() {
     image_url: '',
     image_path: ''
   });
+
+  // Cargar productos y categorías al montar el componente
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    console.log('🚀 Cargando datos de productos y categorías...');
+    setLoading(true);
+    
+    try {
+      // Cargar categorías
+      try {
+        const categoriasData = await categoryService.getCategories();
+        if (categoriasData && Array.isArray(categoriasData)) {
+          setCategories(categoriasData);
+          console.log('✅ Categorías cargadas:', categoriasData.length);
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar categorías:', error);
+        toast.error('Error al cargar categorías');
+      }
+      
+      // Cargar productos
+      try {
+        const productsData = await productService.getProducts();
+        if (productsData && Array.isArray(productsData)) {
+          setProducts(productsData);
+          console.log('✅ Productos cargados:', productsData.length);
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar productos:', error);
+        toast.error('Error al cargar productos');
+      }
+    } catch (error) {
+      console.error('❌ Error general:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,44 +132,76 @@ export default function ProductsPage() {
 
     setLoading(true);
     try {
-      // Mock save - replace with real API call
-      const newProduct: Product = {
-        id: editingProduct?.id || Date.now().toString(),
-        name: productForm.name,
-        description: productForm.description,
+      const productData = {
+        ...productForm,
         price: parseFloat(productForm.price),
-        stock: parseInt(productForm.stock) || 0,
-        category_id: productForm.category_id,
-        image_url: imagePreview || productForm.image_url,
-        image_path: productForm.image_path
+        stock: parseInt(productForm.stock) || 0
       };
 
+      let result: Product;
+
       if (editingProduct) {
-        setProducts(prev => prev.map(p => p.id === editingProduct.id ? newProduct : p));
+        // Actualizar producto existente
+        result = await productService.updateProduct(editingProduct.id, productData);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? result : p));
         toast.success('Producto actualizado exitosamente');
       } else {
-        setProducts(prev => [...prev, newProduct]);
+        // Crear nuevo producto
+        result = await productService.createProduct(productData);
+        setProducts(prev => [...prev, result]);
         toast.success('Producto creado exitosamente');
       }
 
       setIsCreateModalOpen(false);
-    } catch {
-      toast.error('Error al guardar el producto');
+      // Restablecer formulario
+      setProductForm({
+        name: '',
+        description: '',
+        price: '',
+        stock: '',
+        category_id: '',
+        image_url: '',
+        image_path: ''
+      });
+      setImagePreview('');
+    } catch (error) {
+      console.error('❌ Error al guardar producto:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al guardar el producto: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+    const productToDelete = products.find(p => p.id === productId);
+    if (!productToDelete) return;
+
+    if (!confirm(`¿Estás seguro que deseas eliminar el producto "${productToDelete.name}"?`)) {
       return;
     }
 
     try {
+      // Eliminar el producto de la base de datos
+      await productService.deleteProduct(productId);
+      
+      // Si tenemos un path de imagen, eliminarla de Supabase Storage
+      if (productToDelete.image_path) {
+        try {
+          await productService.deleteProductImage(productToDelete.image_path);
+          console.log('✅ Imagen del producto eliminada');
+        } catch (imageError) {
+          console.warn('⚠️ No se pudo eliminar la imagen:', imageError);
+          // No fallar por esto, el producto ya fue eliminado de la BD
+        }
+      }
+      
       setProducts(prev => prev.filter(p => p.id !== productId));
       toast.success('Producto eliminado exitosamente');
-    } catch {
-      toast.error('Error al eliminar el producto');
+    } catch (error) {
+      console.error('❌ Error al eliminar producto:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al eliminar el producto: ${errorMessage}`);
     }
   };
 
@@ -306,7 +352,32 @@ export default function ProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <span className="ml-2">Cargando productos...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex flex-col items-center justify-center text-gray-500">
+                          <Package className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-lg font-medium">No hay productos</p>
+                          <p className="text-sm">
+                            {searchTerm || selectedCategory !== 'all' 
+                              ? 'No se encontraron productos con los filtros aplicados' 
+                              : 'Aún no hay productos registrados en el sistema'
+                            }
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProducts.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -369,7 +440,7 @@ export default function ProductsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )))}
                 </TableBody>
               </Table>
             </CardContent>
