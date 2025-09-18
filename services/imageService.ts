@@ -1,5 +1,5 @@
-// Servicio para manejo de imágenes usando el backend
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ImageUploadResult {
   url: string;
@@ -9,110 +9,76 @@ export interface ImageUploadResult {
 }
 
 export const imageService = {
-  /**
-   * Sube una imagen al backend que la procesará y la subirá a Supabase
-   */
   uploadProductImage: async (file: File): Promise<ImageUploadResult> => {
     try {
-      console.log('📤 Subiendo imagen al backend...');
-      
-      // Validaciones del lado del cliente
       if (!file) {
         throw new Error('No se proporcionó ningún archivo');
       }
 
-      // Validar tipo de archivo
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        throw new Error('Tipo de archivo no válido. Solo se permiten imágenes JPEG, PNG y WebP');
-      }
-
-      // Validar tamaño (5MB máximo)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        throw new Error('El archivo es demasiado grande. Máximo 5MB');
+        throw new Error('El archivo es demasiado grande. Máximo 5MB permitido.');
       }
 
-      // Crear FormData para enviar el archivo
-      const formData = new FormData();
-      formData.append('image', file);
-
-      console.log('� Enviando archivo al servidor...', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-
-      // Enviar al backend
-      const response = await fetch(`${API_URL}/upload-image`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error de red' }));
-        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        throw new Error('Formato de archivo no válido. Use JPEG, PNG, GIF o WEBP.');
       }
 
-      const result = await response.json();
-      console.log('✅ Imagen subida exitosamente:', result);
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
 
-      if (!result.success) {
-        throw new Error(result.message || 'Error al subir imagen');
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) {
+        throw new Error(`Error al subir imagen: ${error.message}`);
       }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
 
       return {
-        url: result.url,
-        path: result.path,
+        url: publicUrlData.publicUrl,
+        path: filePath,
         success: true,
-        message: result.message || 'Imagen subida exitosamente'
+        message: 'Imagen subida correctamente'
       };
 
     } catch (error) {
-      console.error('💥 Error en uploadProductImage:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      
-      throw new Error(`Error al subir imagen: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
   },
 
-  /**
-   * Elimina una imagen del backend que la eliminará de Supabase
-   */
   deleteProductImage: async (imagePath: string): Promise<{ success: boolean; message: string }> => {
     try {
-      console.log('🗑️ Eliminando imagen del backend:', imagePath);
-      
       if (!imagePath) {
         throw new Error('No se proporcionó la ruta de la imagen');
       }
 
-      const response = await fetch(`${API_URL}/upload-image`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imagePath }),
-      });
+      const { error } = await supabase.storage
+        .from('product-images')
+        .remove([imagePath]);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error de red' }));
-        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+      if (error) {
+        throw new Error(`Error al eliminar imagen: ${error.message}`);
       }
-
-      const result = await response.json();
-      console.log('✅ Imagen eliminada exitosamente:', result);
 
       return {
         success: true,
-        message: result.message || 'Imagen eliminada exitosamente'
+        message: 'Imagen eliminada correctamente'
       };
 
     } catch (error) {
-      console.error('💥 Error al eliminar imagen:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      
-      throw new Error(`Error al eliminar imagen: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
   }
 };
