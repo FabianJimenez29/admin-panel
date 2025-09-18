@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
+// Servicio para manejo de imágenes usando el backend
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export interface ImageUploadResult {
   url: string;
@@ -10,142 +10,109 @@ export interface ImageUploadResult {
 
 export const imageService = {
   /**
-   * Sube una imagen directamente al bucket 'product-images' de Supabase
+   * Sube una imagen al backend que la procesará y la subirá a Supabase
    */
   uploadProductImage: async (file: File): Promise<ImageUploadResult> => {
     try {
-      // Validaciones del archivo
+      console.log('📤 Subiendo imagen al backend...');
+      
+      // Validaciones del lado del cliente
       if (!file) {
         throw new Error('No se proporcionó ningún archivo');
       }
 
-      // Validar tamaño (máximo 5MB)
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Tipo de archivo no válido. Solo se permiten imágenes JPEG, PNG y WebP');
+      }
+
+      // Validar tamaño (5MB máximo)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        throw new Error('El archivo es demasiado grande. Máximo 5MB permitido.');
+        throw new Error('El archivo es demasiado grande. Máximo 5MB');
       }
 
-      // Validar tipo de archivo
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        throw new Error('Formato de archivo no válido. Use JPEG, PNG, GIF o WEBP.');
-      }
+      // Crear FormData para enviar el archivo
+      const formData = new FormData();
+      formData.append('image', file);
 
-      // Generar nombre único para el archivo
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      console.log('📤 Subiendo imagen a Supabase Storage:', {
-        bucket: 'product-images',
-        path: filePath,
+      console.log('� Enviando archivo al servidor...', {
+        name: file.name,
         size: file.size,
         type: file.type
       });
 
-      // Subir archivo a Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false, // No sobrescribir si ya existe
-        });
+      // Enviar al backend
+      const response = await fetch(`${API_URL}/upload-image`, {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (error) {
-        console.error('❌ Error al subir archivo:', error);
-        throw new Error(`Error al subir imagen: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error de red' }));
+        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
 
-      if (!data) {
-        throw new Error('No se recibieron datos de la subida');
+      const result = await response.json();
+      console.log('✅ Imagen subida exitosamente:', result);
+
+      if (!result.success) {
+        throw new Error(result.message || 'Error al subir imagen');
       }
-
-      console.log('✅ Archivo subido exitosamente:', data);
-
-      // Obtener URL pública
-      const { data: publicUrlData } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData?.publicUrl) {
-        throw new Error('No se pudo obtener la URL pública de la imagen');
-      }
-
-      console.log('🔗 URL pública generada:', publicUrlData.publicUrl);
 
       return {
-        url: publicUrlData.publicUrl,
-        path: filePath,
+        url: result.url,
+        path: result.path,
         success: true,
-        message: 'Imagen subida correctamente'
+        message: result.message || 'Imagen subida exitosamente'
       };
 
     } catch (error) {
       console.error('💥 Error en uploadProductImage:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al subir imagen';
-      
-      throw new Error(errorMessage);
+      throw new Error(`Error al subir imagen: ${errorMessage}`);
     }
   },
 
   /**
-   * Elimina una imagen del bucket 'product-images' de Supabase
+   * Elimina una imagen del backend que la eliminará de Supabase
    */
   deleteProductImage: async (imagePath: string): Promise<{ success: boolean; message: string }> => {
     try {
+      console.log('🗑️ Eliminando imagen del backend:', imagePath);
+      
       if (!imagePath) {
         throw new Error('No se proporcionó la ruta de la imagen');
       }
 
-      console.log('🗑️ Eliminando imagen de Supabase Storage:', imagePath);
+      const response = await fetch(`${API_URL}/upload-image`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imagePath }),
+      });
 
-      const { error } = await supabase.storage
-        .from('product-images')
-        .remove([imagePath]);
-
-      if (error) {
-        console.error('❌ Error al eliminar imagen:', error);
-        throw new Error(`Error al eliminar imagen: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error de red' }));
+        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
 
-      console.log('✅ Imagen eliminada exitosamente');
+      const result = await response.json();
+      console.log('✅ Imagen eliminada exitosamente:', result);
 
       return {
         success: true,
-        message: 'Imagen eliminada correctamente'
+        message: result.message || 'Imagen eliminada exitosamente'
       };
 
     } catch (error) {
-      console.error('💥 Error en deleteProductImage:', error);
+      console.error('💥 Error al eliminar imagen:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al eliminar imagen';
-      
-      throw new Error(errorMessage);
-    }
-  },
-
-  /**
-   * Lista todas las imágenes en el bucket 'product-images'
-   */
-  listProductImages: async (): Promise<string[]> => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .list('products', {
-          limit: 100,
-          offset: 0,
-        });
-
-      if (error) {
-        throw new Error(`Error al listar imágenes: ${error.message}`);
-      }
-
-      return data?.map(file => `products/${file.name}`) || [];
-
-    } catch (error) {
-      console.error('Error al listar imágenes:', error);
-      throw error;
+      throw new Error(`Error al eliminar imagen: ${errorMessage}`);
     }
   }
 };
