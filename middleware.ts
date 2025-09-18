@@ -3,33 +3,17 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('token');
   
-  console.log('Middleware - Pathname:', pathname);
-  
-  // SIEMPRE redirigir la página principal al login
+  // SOLO redirigir la página principal al login, NADA MÁS
   if (pathname === '/') {
-    console.log('Página principal - Redirigiendo SIEMPRE al login');
+    console.log('Página principal - Redirigiendo al login');
     return NextResponse.redirect(new URL('/login', request.url));
   }
   
-  // Proteger rutas del dashboard - requieren token
-  if (pathname.startsWith('/dashboard')) {
-    if (!token) {
-      console.log('Dashboard sin token - Redirigiendo al login');
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
-
-  // Si hay token válido y está en login, ir al dashboard
-  if (token && pathname === '/login') {
-    console.log('Login con token válido - Redirigiendo al dashboard');
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
+  // Dejar pasar TODO lo demás sin verificaciones
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*', '/login'],
+  matcher: ['/'],
 };

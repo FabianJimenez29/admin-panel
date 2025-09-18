@@ -10,36 +10,35 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('ProtectedRoute - Verificando autenticación...');
-    
-    // Verificación simple y directa
+    // Solo verificar si NO está autenticado
     if (!isAuthenticated()) {
-      console.log('ProtectedRoute - No autenticado, redirigiendo al login');
-      window.location.href = '/login';
+      window.location.replace('/login');
       return;
     }
 
+    // Solo verificar si NO es superAdmin
     if (user?.rol !== 'superAdmin') {
-      console.log('ProtectedRoute - No es superAdmin, cerrando sesión');
-      logout();
+      // Limpiar datos y ir al login
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      window.location.replace('/login');
       return;
     }
 
-    // Si llega aquí, está autenticado y es superAdmin
-    console.log('ProtectedRoute - Usuario válido, mostrando contenido');
+    // Si llegó aquí, todo está bien
     setIsLoading(false);
-  }, [isAuthenticated, user, logout]);
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Verificando permisos...</p>
+          <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
     );

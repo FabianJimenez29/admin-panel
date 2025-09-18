@@ -26,20 +26,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
   
   logout: () => {
-    console.log('Logout - Limpiando datos y redirigiendo');
     localStorage.removeItem('token');
     localStorage.removeItem('userData');
-    // Limpiar cookies
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     set({ token: null, user: null });
-    // Redirección inmediata
-    window.location.href = '/login';
+    window.location.replace('/login');
   },
   
   isAuthenticated: () => {
     const state = get();
-    const result = !!state.token && !!state.user;
-    console.log('Auth check - Token:', !!state.token, 'User:', !!state.user, 'Result:', result);
-    return result;
+    return !!state.token && !!state.user;
   },
 }));

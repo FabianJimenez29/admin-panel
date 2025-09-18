@@ -58,14 +58,13 @@ export default function LoginPage() {
         
         // Guardar token en cookies
         const cookieExpiry = new Date();
-        cookieExpiry.setDate(cookieExpiry.getDate() + 7); // 7 días
+        cookieExpiry.setDate(cookieExpiry.getDate() + 7);
         document.cookie = `token=${data.token}; path=/; expires=${cookieExpiry.toUTCString()}; SameSite=Lax`;
         
         toast.success('Login exitoso');
-        console.log('Login exitoso - Redirigiendo al dashboard');
         
-        // Redirección directa e inmediata
-        window.location.href = '/dashboard';
+        // Redirección simple
+        window.location.replace('/dashboard');
       } else {
         toast.error('Datos de usuario inválidos o rol incorrecto');
       }
