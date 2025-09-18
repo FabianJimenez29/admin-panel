@@ -1,28 +1,38 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { forceRedirectToLogin, forceRedirectToDashboard } from '@/lib/navigation';
 
 export default function Home() {
-  const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    // Siempre redirigir al login primero para verificar autenticación
-    if (!isAuthenticated()) {
-      router.replace('/login');
-    } else {
-      // Si está autenticado y es superAdmin, ir al dashboard
-      if (user?.rol === 'superAdmin') {
-        router.replace('/dashboard');
+    const checkAuthAndRedirect = async () => {
+      console.log('Página principal - Verificando autenticación...');
+      
+      // Pequeño delay para asegurar que el estado esté listo
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!isAuthenticated()) {
+        console.log('Página principal - No autenticado, redirigiendo al login');
+        forceRedirectToLogin();
       } else {
-        // Si no es superAdmin, cerrar sesión y ir al login
-        router.replace('/login');
+        // Si está autenticado y es superAdmin, ir al dashboard
+        if (user?.rol === 'superAdmin') {
+          console.log('Página principal - Usuario autenticado, redirigiendo al dashboard');
+          forceRedirectToDashboard();
+        } else {
+          // Si no es superAdmin, ir al login
+          console.log('Página principal - Usuario no es superAdmin, redirigiendo al login');
+          forceRedirectToLogin();
+        }
       }
-    }
-  }, [isAuthenticated, user, router]);
+    };
+
+    checkAuthAndRedirect();
+  }, [isAuthenticated, user]);
 
   // Mostramos un loading mientras se realiza la redirección
   return (

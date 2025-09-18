@@ -3,18 +3,32 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token');
-  const isAuthRoute = request.nextUrl.pathname === '/login';
-  const isDashboardRoute = request.nextUrl.pathname === '/dashboard' || request.nextUrl.pathname.startsWith('/dashboard/');
+  const { pathname } = request.nextUrl;
+  
+  console.log('Middleware - Pathname:', pathname);
+  console.log('Middleware - Token exists:', !!token);
+  
+  // Si está en la página principal sin token, redirigir al login
+  if (pathname === '/' && !token) {
+    console.log('Página principal sin token, redirigiendo a login');
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  
+  // Si está en la página principal con token, redirigir al dashboard
+  if (pathname === '/' && token) {
+    console.log('Página principal con token, redirigiendo a dashboard');
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
   
   // Si no hay token y está intentando acceder al dashboard
-  if (!token && isDashboardRoute) {
-    console.log('No hay token, redirigiendo a login');
+  if (!token && pathname.startsWith('/dashboard')) {
+    console.log('Dashboard sin token, redirigiendo a login');
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Si hay token y está intentando acceder al login
-  if (token && isAuthRoute) {
-    console.log('Token encontrado, redirigiendo a dashboard');
+  if (token && pathname === '/login') {
+    console.log('Login con token, redirigiendo a dashboard');
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
@@ -22,5 +36,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/', '/dashboard/:path*', '/login'],
 };

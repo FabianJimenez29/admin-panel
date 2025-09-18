@@ -1,42 +1,49 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { forceRedirectToLogin } from '@/lib/navigation';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [isLoading, setIsLoading] = useState(true);
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
+      console.log('ProtectedRoute - Verificando autenticación...');
+      
+      // Pequeño delay para asegurar que el estado esté listo
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       if (!isAuthenticated()) {
-        console.log('Usuario no autenticado, redirigiendo al login');
-        router.replace('/login');
+        console.log('ProtectedRoute - Usuario no autenticado, redirigiendo al login');
+        forceRedirectToLogin();
         return;
       }
 
       if (user?.rol !== 'superAdmin') {
-        console.log('Usuario no es superAdmin, cerrando sesión');
+        console.log('ProtectedRoute - Usuario no es superAdmin, cerrando sesión');
         logout();
         return;
       }
 
       // Si llega aquí, está autenticado y es superAdmin
+      console.log('ProtectedRoute - Usuario autenticado correctamente');
+      setShouldRender(true);
       setIsLoading(false);
     };
 
     checkAuth();
-  }, [isAuthenticated, user, router, logout]);
+  }, [isAuthenticated, user, logout]);
 
-  if (isLoading) {
+  if (isLoading || !shouldRender) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
