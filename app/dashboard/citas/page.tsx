@@ -57,6 +57,7 @@ type Cita = {
 
 export default function CitasPage() {
   const [citas, setCitas] = useState<Cita[]>([]);
+  const [allCitas, setAllCitas] = useState<Cita[]>([]); // Todas las citas sin filtro
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10));
@@ -77,28 +78,44 @@ export default function CitasPage() {
   const loadAppointments = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await appointmentService.getAppointmentsByDate(selectedDate);
-      setCitas(Array.isArray(data) ? data : []);
+      // Cargar TODAS las citas (sin filtro de fecha para admin panel)
+      const data = await appointmentService.getAppointments();
+      const validData = Array.isArray(data) ? data : [];
+      setAllCitas(validData);
+      // Inicialmente mostrar las citas del día seleccionado
+      filterCitasByDate(validData, selectedDate);
     } catch (error) {
       console.error('Error al cargar citas:', error);
       toast.error('Error al cargar las citas');
+      setAllCitas([]);
       setCitas([]);
     } finally {
       setLoading(false);
     }
   }, [selectedDate]);
 
+  const filterCitasByDate = (allCitas: Cita[], date: string) => {
+    const filtered = allCitas.filter(cita => cita.fecha === date);
+    setCitas(filtered);
+  };
+
   useEffect(() => {
     loadAppointments();
   }, [loadAppointments]);
+
+  // Filtrar citas cuando cambie la fecha seleccionada
+  useEffect(() => {
+    if (allCitas.length > 0) {
+      filterCitasByDate(allCitas, selectedDate);
+    }
+  }, [selectedDate, allCitas]);
 
   const filteredCitas = Array.isArray(citas) ? citas.filter(cita => {
     const matchesSearch = cita.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cita.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cita.numero_placa?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDate = cita.fecha === selectedDate;
     const matchesStatus = statusFilter === 'Todas' || cita.status === statusFilter;
-    return matchesSearch && matchesDate && matchesStatus;
+    return matchesSearch && matchesStatus;
   }) : [];
 
   const getStatusBadge = (status: string) => {
@@ -159,12 +176,14 @@ export default function CitasPage() {
         updateData.observaciones
       );
       
-      // Actualizar la cita en el estado local
-      setCitas(prev => prev.map(c => 
+      // Actualizar en ambos estados
+      const updateFn = (c: Cita) => 
         c.id === selectedCita.id 
           ? { ...c, ...updateData }
-          : c
-      ));
+          : c;
+          
+      setAllCitas(prev => prev.map(updateFn));
+      setCitas(prev => prev.map(updateFn));
       
       setShowUpdateModal(false);
       toast.success('Cita actualizada exitosamente');
@@ -177,7 +196,7 @@ export default function CitasPage() {
   };
 
   const getStats = () => {
-    if (!Array.isArray(citas)) {
+    if (!Array.isArray(allCitas)) {
       return {
         total: 0,
         pendientes: 0,
@@ -187,7 +206,7 @@ export default function CitasPage() {
     }
     
     const today = new Date().toISOString().slice(0, 10);
-    const todayCitas = citas.filter(c => c.fecha === today);
+    const todayCitas = allCitas.filter(c => c.fecha === today);
     
     return {
       total: todayCitas.length,

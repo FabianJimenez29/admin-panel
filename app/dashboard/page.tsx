@@ -69,16 +69,21 @@ export default function DashboardPage() {
         adminService.getAdmins().catch(() => [])
       ]);
 
+      // Asegurar que todos los datos sean arrays
+      const validProducts = Array.isArray(products) ? products : [];
+      const validAppointments = Array.isArray(appointments) ? appointments : [];
+      const validAdmins = Array.isArray(admins) ? admins : [];
+
       // Calcular estadísticas
       const today = new Date().toISOString().slice(0, 10);
-      const todayAppointments = appointments.filter((app: AppointmentData) => app.fecha === today);
-      const activeAdmins = admins.filter((admin: AdminData) => admin.active || admin.activo);
+      const todayAppointments = validAppointments.filter((app: AppointmentData) => app.fecha === today);
+      const activeAdmins = validAdmins.filter((admin: AdminData) => admin.active || admin.activo);
 
       setStats({
-        totalProducts: products.length,
-        totalAppointments: appointments.length,
+        totalProducts: validProducts.length,
+        totalAppointments: validAppointments.length,
         todayAppointments: todayAppointments.length,
-        totalAdmins: admins.length,
+        totalAdmins: validAdmins.length,
         activeAdmins: activeAdmins.length
       });
     } catch (error) {
