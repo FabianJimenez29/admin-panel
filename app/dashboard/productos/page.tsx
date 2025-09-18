@@ -382,24 +382,55 @@ export default function Productos() {
     }
   };
 
+  // Función helper para extraer el path de una URL de Supabase
+  const extractImagePathFromUrl = (imageUrl: string): string | null => {
+    try {
+      if (!imageUrl.includes('supabase.co') || !imageUrl.includes('/storage/v1/object/public/product-images/')) {
+        return null; // No es una URL de Supabase Storage
+      }
+      
+      const urlParts = imageUrl.split('/storage/v1/object/public/product-images/');
+      if (urlParts.length < 2) return null;
+      
+      return urlParts[1]; // Retorna "products/filename.ext"
+    } catch (error) {
+      console.warn('Error extrayendo path de URL:', error);
+      return null;
+    }
+  };
+
   const handleDeleteProduct = async (product: Product) => {
     if (!confirm(`¿Estás seguro que deseas eliminar el producto "${product.name}"?`)) {
       return;
     }
     
     try {
+      // Determinar el path de la imagen para eliminar
+      let imagePathToDelete: string | null = null;
+      
+      if (product.image_path) {
+        // Si tenemos el path directo, usarlo
+        imagePathToDelete = product.image_path;
+      } else if (product.image_url) {
+        // Si solo tenemos la URL, extraer el path
+        imagePathToDelete = extractImagePathFromUrl(product.image_url);
+      }
+      
       // Primero eliminar el producto de la base de datos
       await productService.deleteProduct(product.id);
+      console.log('✅ Producto eliminado de la base de datos');
       
-      // Si el producto tiene una imagen, intentar eliminarla de Supabase
-      if (product.image_path) {
+      // Si tenemos un path de imagen, eliminarla de Supabase Storage
+      if (imagePathToDelete) {
         try {
-          await productService.deleteProductImage(product.image_path);
-          console.log('✅ Imagen del producto eliminada de Supabase');
+          await productService.deleteProductImage(imagePathToDelete);
+          console.log('✅ Imagen del producto eliminada de Supabase Storage');
         } catch (imageError) {
           console.warn('⚠️ No se pudo eliminar la imagen del producto:', imageError);
           // No fallar por esto, el producto ya fue eliminado de la BD
         }
+      } else {
+        console.log('ℹ️ Producto sin imagen o con imagen externa, no se elimina de Storage');
       }
       
       setProductos(prev => prev.filter(p => p.id !== product.id));
@@ -836,14 +867,25 @@ export default function Productos() {
                           <button
                             type="button"
                             onClick={async () => {
-                              // Si estamos editando un producto y tiene una imagen en Supabase, eliminarla
-                              if (editingProduct?.image_path && !selectedImage) {
+                              // Determinar qué imagen eliminar
+                              let imagePathToDelete: string | null = null;
+                              
+                              if (editingProduct?.image_path) {
+                                // Si tenemos el path directo, usarlo
+                                imagePathToDelete = editingProduct.image_path;
+                              } else if (editingProduct?.image_url) {
+                                // Si solo tenemos la URL, extraer el path
+                                imagePathToDelete = extractImagePathFromUrl(editingProduct.image_url);
+                              }
+                              
+                              // Si hay una imagen en Supabase Storage, eliminarla
+                              if (imagePathToDelete && !selectedImage) {
                                 try {
-                                  await productService.deleteProductImage(editingProduct.image_path);
+                                  await productService.deleteProductImage(imagePathToDelete);
                                   toast.success('Imagen eliminada correctamente');
                                   
                                   // Actualizar el producto en el estado local
-                                  setEditingProduct(prev => prev ? { ...prev, image_url: '', image_path: '' } : null);
+                                  setEditingProduct(prev => prev ? { ...prev, image_url: '', image_path: undefined } : null);
                                 } catch (error) {
                                   console.error('Error al eliminar imagen:', error);
                                   toast.error('Error al eliminar la imagen');
