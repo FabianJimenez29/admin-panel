@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ImageUploadResult {
@@ -11,6 +11,12 @@ export interface ImageUploadResult {
 export const imageService = {
   uploadProductImage: async (file: File): Promise<ImageUploadResult> => {
     try {
+      const supabase = getSupabaseClient();
+      
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
       if (!file) {
         throw new Error('No se proporcionó ningún archivo');
       }
@@ -59,6 +65,12 @@ export const imageService = {
 
   deleteProductImage: async (imagePath: string): Promise<{ success: boolean; message: string }> => {
     try {
+      const supabase = getSupabaseClient();
+      
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
       if (!imagePath) {
         throw new Error('No se proporcionó la ruta de la imagen');
       }

@@ -1,6 +1,5 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { imageService } from './imageService';
 
 // Usamos la variable de entorno para obtener la URL del backend
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -185,7 +184,8 @@ export const productService = {
 
   uploadProductImage: async (imageFile: File) => {
     try {
-      // Usar el servicio de imagen de Supabase directamente
+      // Importación dinámica para evitar problemas en build
+      const { imageService } = await import('./imageService');
       const result = await imageService.uploadProductImage(imageFile);
       
       return {
@@ -201,7 +201,8 @@ export const productService = {
   
   deleteProductImage: async (imagePath: string) => {
     try {
-      // Usar el servicio de imagen de Supabase directamente
+      // Importación dinámica para evitar problemas en build
+      const { imageService } = await import('./imageService');
       const result = await imageService.deleteProductImage(imagePath);
       
       return result;
