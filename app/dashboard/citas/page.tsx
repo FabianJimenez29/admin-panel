@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -74,11 +74,7 @@ export default function CitasPage() {
   const statusOptions = ['Todas', 'Pendiente', 'Confirmada', 'En Proceso', 'Completada', 'Cancelada'];
   const tecnicos = ['Carlos López', 'Ana Rodríguez', 'Miguel Torres', 'Laura Sánchez'];
 
-  useEffect(() => {
-    loadAppointments();
-  }, [selectedDate]);
-
-  const loadAppointments = async () => {
+  const loadAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const data = await appointmentService.getAppointmentsByDate(selectedDate);
@@ -90,7 +86,11 @@ export default function CitasPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
 
   const filteredCitas = citas.filter(cita => {
     const matchesSearch = cita.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

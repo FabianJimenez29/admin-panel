@@ -43,6 +43,16 @@ type Admin = {
   rol?: string;
 };
 
+type AdminUpdateData = {
+  nombre: string;
+  email: string;
+  telefono?: string;
+  provincia?: string;
+  canton?: string;
+  distrito?: string;
+  password?: string;
+};
+
 export default function AdminsPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +161,7 @@ export default function AdminsPage() {
     try {
       if (editingAdmin) {
         // Actualizar administrador existente
-        const updateData: any = {
+        const updateData: AdminUpdateData = {
           nombre: formData.nombre,
           email: formData.email,
           telefono: formData.telefono,

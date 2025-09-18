@@ -696,9 +696,11 @@ export default function Productos() {
                           <div className="flex justify-between items-center">
                             {producto.image_url ? (
                               <div className="w-16 h-16 relative">
-                                <img 
+                                <Image 
                                   src={producto.image_url}
                                   alt={producto.name}
+                                  width={64}
+                                  height={64}
                                   className="w-full h-full object-cover rounded"
                                 />
                               </div>

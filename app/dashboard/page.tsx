@@ -22,6 +22,20 @@ import {
 import Link from 'next/link';
 import { productService, appointmentService, adminService } from '@/services/api';
 
+interface AppointmentData {
+  id: number;
+  fecha: string;
+  status: string;
+  [key: string]: any;
+}
+
+interface AdminData {
+  id: number;
+  active: boolean;
+  activo?: boolean;
+  [key: string]: any;
+}
+
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
@@ -52,8 +66,8 @@ export default function DashboardPage() {
 
       // Calcular estadísticas
       const today = new Date().toISOString().slice(0, 10);
-      const todayAppointments = appointments.filter((app: any) => app.fecha === today);
-      const activeAdmins = admins.filter((admin: any) => admin.active);
+      const todayAppointments = appointments.filter((app: AppointmentData) => app.fecha === today);
+      const activeAdmins = admins.filter((admin: AdminData) => admin.active || admin.activo);
 
       setStats({
         totalProducts: products.length,
