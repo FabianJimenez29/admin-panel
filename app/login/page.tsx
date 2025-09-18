@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Lock, Mail, Shield, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -17,7 +21,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log('Iniciando login...');
       const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
       const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
@@ -29,44 +32,36 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      console.log('Respuesta del servidor:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Error en el login');
       }
 
-      // Validar que tenemos los datos necesarios
       if (!data.token || !data.user) {
         throw new Error('Respuesta del servidor incompleta');
       }
 
       if (data.user?.rol !== 'superAdmin') {
-        toast.error('Acceso no autorizado - Solo SuperAdmin');
+        toast.error('Acceso no autorizado - Solo Super Administradores');
         return;
       }
 
-      // Guardar datos en el store
-      // Validar datos del usuario antes de redirigir
       if (
         data.user &&
         typeof data.user.id === 'number' &&
         typeof data.user.email === 'string' &&
         data.user.rol === 'superAdmin'
       ) {
-        // Guardar en el store
         setAuth(data.token, data.user);
         
-        // Guardar token en cookies
         const cookieExpiry = new Date();
         cookieExpiry.setDate(cookieExpiry.getDate() + 7);
         document.cookie = `token=${data.token}; path=/; expires=${cookieExpiry.toUTCString()}; SameSite=Lax`;
         
-        toast.success('Login exitoso');
-        
-        // Redirección simple
+        toast.success('¡Bienvenido al panel administrativo!');
         window.location.replace('/dashboard');
       } else {
-        toast.error('Datos de usuario inválidos o rol incorrecto');
+        toast.error('Datos de usuario inválidos');
       }
 
     } catch (error: unknown) {
@@ -82,60 +77,99 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Panel de Super Administrador
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Acceso exclusivo para super administradores
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Panel Administrativo
+          </h1>
+          <p className="text-gray-600">
+            Acceso seguro para administradores
           </p>
+          <Badge variant="secondary" className="mt-2">
+            Super Admin Only
+          </Badge>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
-          </div>
-        </form>
+        {/* Login Card */}
+        <Card className="shadow-lg border-0">
+          <CardHeader className="space-y-1 pb-6">
+            <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
+            <CardDescription className="text-center">
+              Ingresa tus credenciales para acceder al sistema
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Correo Electrónico
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@ejemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Contraseña
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <Button 
+                type="submit" 
+                className="w-full h-11 mt-6"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  'Iniciar Sesión'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-6 text-sm text-gray-500">
+          <p>Sistema de administración seguro</p>
+          <p className="mt-1">Solo usuarios autorizados</p>
+        </div>
       </div>
     </div>
   );
