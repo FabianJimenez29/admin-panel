@@ -518,21 +518,6 @@ export default function Productos() {
             >
               {showCategoriesSection ? '+ Nueva Categoría' : '+ Nuevo Producto'}
             </button>
-            <button 
-              onClick={async () => {
-                try {
-                  const { imageService } = await import('@/services/imageService');
-                  await imageService.testBucket();
-                  alert('✅ Bucket OK - revisa la consola');
-                } catch (error) {
-                  console.error('Error:', error);
-                  alert('❌ Error con bucket - revisa la consola');
-                }
-              }}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-            >
-              🧪 Test Bucket
-            </button>
           </div>
         </div>
 
