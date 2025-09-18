@@ -173,8 +173,8 @@ export const productService = {
   
   deleteProduct: async (id: string) => {
     try {
-      // Usar query parameter para el ID
-      const response = await api.delete(`/products?id=${id}`);
+      // Usar la ruta con ID dinámico
+      const response = await api.delete(`/products/${id}`);
       return response.data;
     } catch (error: unknown) {
       console.error(`Error al eliminar producto con id ${id}:`, error);
