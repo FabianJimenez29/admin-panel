@@ -1,5 +1,6 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { imageService } from './imageService';
 
 // Usamos la variable de entorno para obtener la URL del backend
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -142,6 +143,7 @@ export const productService = {
     stock: number;
     category_id?: string;
     image_url?: string;
+    image_path?: string;
   }) => {
     try {
       const response = await api.post('/products', productData);
@@ -159,6 +161,7 @@ export const productService = {
     stock?: number;
     category_id?: string;
     image_url?: string;
+    image_path?: string;
   }) => {
     try {
       const response = await api.put(`/products/${id}`, productData);
@@ -182,72 +185,36 @@ export const productService = {
 
   uploadProductImage: async (imageFile: File) => {
     try {
-      const uploadUrl = `${API_URL}/products/upload-image`;
+      // Usar el servicio de imagen de Supabase directamente
+      const result = await imageService.uploadProductImage(imageFile);
       
-      console.log('Uploading image to:', uploadUrl);
-      
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      
-      const response = await axios.post(uploadUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-        timeout: 30000,
-      });
-      
-      if (!response.data && response.data.url === undefined) {
-        throw new Error('El servidor no devolvió una URL para la imagen');
+      if (!result.success) {
+        throw new Error(result.message || 'Error al subir imagen');
       }
       
-      if (process.env.NODE_ENV === 'development' && !response.data.url) {
-        console.warn('Usando URL de imagen de muestra para desarrollo');
-        return {
-          url: `https://picsum.photos/id/${Math.floor(Math.random() * 1000)}/300/300`,
-          path: 'sample/image.jpg'
-        };
-      }
-      
-      return response.data;
+      return {
+        url: result.url,
+        path: result.path,
+        message: result.message
+      };
     } catch (error) {
       console.error('Error al subir imagen:', error);
-      
-      // In development mode, provide a fallback image
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Error al subir imagen. Usando imagen de muestra para desarrollo');
-        return {
-          url: `https://picsum.photos/id/${Math.floor(Math.random() * 1000)}/300/300`,
-          path: 'sample/image.jpg'
-        };
-      }
-      
       throw error;
     }
   },
   
   deleteProductImage: async (imagePath: string) => {
     try {
-      // Usar la URL del backend definida en variables de entorno
-      const deleteUrl = `${API_URL}/products/delete-image`;
+      // Usar el servicio de imagen de Supabase directamente
+      const result = await imageService.deleteProductImage(imagePath);
       
-      console.log('Deleting image at path:', imagePath);
-      
-      const response = await axios.delete(deleteUrl, {
-        data: { path: imagePath },
-        withCredentials: false
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('Error al eliminar imagen:', error);
-      
-      // In development mode, just pretend it worked
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Error al eliminar imagen. En modo desarrollo, simulamos éxito.');
-        return { success: true, message: 'Imagen eliminada (simulado)' };
+      if (!result.success) {
+        throw new Error(result.message || 'Error al eliminar imagen');
       }
       
+      return result;
+    } catch (error) {
+      console.error('Error al eliminar imagen:', error);
       throw error;
     }
   }

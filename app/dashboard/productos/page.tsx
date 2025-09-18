@@ -101,6 +101,7 @@ export default function Productos() {
   // Estado para manejo de archivos de imagen
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
   
   // Estado para indicar operaciones en curso
   const [saving, setSaving] = useState<boolean>(false);
@@ -235,6 +236,8 @@ export default function Productos() {
       });
       setImagePreview(null);
     }
+    setSelectedImage(null);
+    setUploading(false);
     setShowProductModal(true);
   };
 
@@ -289,65 +292,55 @@ export default function Productos() {
     
     try {
       let imageUrl = productForm.image_url;
+      let imagePath: string | undefined = editingProduct?.image_path;
       
       // Si hay una imagen seleccionada, subirla primero
       if (selectedImage) {
         try {
-          // Verificar tamaño de archivo (máximo 5MB)
-          if (selectedImage.size > 5 * 1024 * 1024) {
-            toast.error('La imagen es demasiado grande. Máximo 5MB permitido.');
-            setSaving(false);
-            return;
-          }
-          
-          // Verificar tipo de archivo
-          const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-          if (!validTypes.includes(selectedImage.type)) {
-            toast.error('Formato de imagen no válido. Use JPEG, PNG, GIF o WEBP.');
-            setSaving(false);
-            return;
-          }
-          
+          setUploading(true);
           toast.loading('Subiendo imagen...', { id: 'uploading' });
-          try {
-            const uploadResult = await productService.uploadProductImage(selectedImage);
-            
-            if (uploadResult && uploadResult.url) {
-              imageUrl = uploadResult.url; // Usar la URL devuelta por la API
-              toast.success('Imagen subida correctamente', { id: 'uploading' });
-              console.log('Imagen subida exitosamente:', uploadResult);
-            } else {
-              console.warn('Respuesta inesperada al subir imagen:', uploadResult);
-              toast.error('Error al subir la imagen: Respuesta inválida del servidor', { id: 'uploading' });
-              setSaving(false);
-              return;
-            }
-          } catch (uploadError) {
-            console.error('Error al intentar subir imagen:', uploadError);
-            toast.error('Error al subir imagen. Usando imagen temporal para desarrollo', { id: 'uploading' });
-            
-            // En desarrollo, usar una imagen de muestra
-            if (process.env.NODE_ENV === 'development') {
-              imageUrl = `https://picsum.photos/id/${Math.floor(Math.random() * 1000)}/300/300`;
-            } else {
-              setSaving(false);
-              return;
+          
+          // Si hay una imagen anterior y vamos a subir una nueva, eliminar la anterior
+          if (editingProduct?.image_path) {
+            try {
+              await productService.deleteProductImage(editingProduct.image_path);
+              console.log('✅ Imagen anterior eliminada');
+            } catch (deleteError) {
+              console.warn('⚠️ No se pudo eliminar la imagen anterior:', deleteError);
+              // No fallar por esto, continuar con la subida
             }
           }
-        } catch (err) {
-          const error = err instanceof Error ? err : new Error(
-            typeof err === 'string' ? err : 'Error desconocido al subir la imagen'
-          );
-          console.error('Error al subir imagen:', error);
-          toast.error(`Error al subir la imagen: ${error.message}`, { id: 'uploading' });
+          
+          const uploadResult = await productService.uploadProductImage(selectedImage);
+          
+          if (uploadResult && uploadResult.url) {
+            imageUrl = uploadResult.url;
+            imagePath = uploadResult.path;
+            toast.success('Imagen subida correctamente', { id: 'uploading' });
+            console.log('✅ Imagen subida exitosamente:', uploadResult);
+          } else {
+            console.warn('⚠️ Respuesta inesperada al subir imagen:', uploadResult);
+            toast.error('Error al subir la imagen: Respuesta inválida del servidor', { id: 'uploading' });
+            setSaving(false);
+            setUploading(false);
+            return;
+          }
+        } catch (uploadError) {
+          console.error('❌ Error al subir imagen:', uploadError);
+          const errorMessage = uploadError instanceof Error ? uploadError.message : 'Error desconocido';
+          toast.error(`Error al subir imagen: ${errorMessage}`, { id: 'uploading' });
           setSaving(false);
+          setUploading(false);
           return;
+        } finally {
+          setUploading(false);
         }
       }
       
       const productData = {
         ...productForm,
         image_url: imageUrl,
+        image_path: imagePath,
         price: parseFloat(productForm.price),
         stock: parseInt(productForm.stock, 10)
       };
@@ -381,10 +374,11 @@ export default function Productos() {
       setShowProductModal(false);
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error('Error desconocido');
-      console.error('Error al guardar producto:', error);
+      console.error('❌ Error al guardar producto:', error);
       toast.error(`Error al guardar el producto: ${error.message}`);
     } finally {
       setSaving(false);
+      setUploading(false);
     }
   };
 
@@ -394,11 +388,24 @@ export default function Productos() {
     }
     
     try {
+      // Primero eliminar el producto de la base de datos
       await productService.deleteProduct(product.id);
+      
+      // Si el producto tiene una imagen, intentar eliminarla de Supabase
+      if (product.image_path) {
+        try {
+          await productService.deleteProductImage(product.image_path);
+          console.log('✅ Imagen del producto eliminada de Supabase');
+        } catch (imageError) {
+          console.warn('⚠️ No se pudo eliminar la imagen del producto:', imageError);
+          // No fallar por esto, el producto ya fue eliminado de la BD
+        }
+      }
+      
       setProductos(prev => prev.filter(p => p.id !== product.id));
       toast.success('Producto eliminado correctamente');
     } catch (err) {
-      console.error('Error al eliminar producto:', err);
+      console.error('❌ Error al eliminar producto:', err);
       toast.error('Error al eliminar el producto');
     }
   };
@@ -830,6 +837,21 @@ export default function Productos() {
                           <button
                             type="button"
                             onClick={async () => {
+                              // Si estamos editando un producto y tiene una imagen en Supabase, eliminarla
+                              if (editingProduct?.image_path && !selectedImage) {
+                                try {
+                                  await productService.deleteProductImage(editingProduct.image_path);
+                                  toast.success('Imagen eliminada correctamente');
+                                  
+                                  // Actualizar el producto en el estado local
+                                  setEditingProduct(prev => prev ? { ...prev, image_url: '', image_path: '' } : null);
+                                } catch (error) {
+                                  console.error('Error al eliminar imagen:', error);
+                                  toast.error('Error al eliminar la imagen');
+                                  return;
+                                }
+                              }
+                              
                               // Limpiar la imagen localmente
                               setProductForm(prev => ({ 
                                 ...prev, 
@@ -839,8 +861,9 @@ export default function Productos() {
                               setSelectedImage(null);
                             }}
                             className="ml-3 text-sm text-red-600 hover:text-red-500"
+                            disabled={uploading}
                           >
-                            Eliminar
+                            {uploading ? 'Procesando...' : 'Eliminar'}
                           </button>
                         )}
                       </div>
@@ -858,10 +881,10 @@ export default function Productos() {
                   </button>
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || uploading}
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
-                    {saving ? 'Guardando...' : 'Guardar'}
+                    {uploading ? 'Subiendo imagen...' : saving ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
               </form>
