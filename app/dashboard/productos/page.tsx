@@ -518,6 +518,21 @@ export default function Productos() {
             >
               {showCategoriesSection ? '+ Nueva Categoría' : '+ Nuevo Producto'}
             </button>
+            <button 
+              onClick={async () => {
+                try {
+                  const { imageService } = await import('@/services/imageService');
+                  await imageService.testBucket();
+                  alert('✅ Bucket OK - revisa la consola');
+                } catch (error) {
+                  console.error('Error:', error);
+                  alert('❌ Error con bucket - revisa la consola');
+                }
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              🧪 Test Bucket
+            </button>
           </div>
         </div>
 
@@ -656,7 +671,16 @@ export default function Productos() {
                       <p className="text-gray-500 text-lg">No se encontraron productos</p>
                     </div>
                   ) : (
-                    productosFiltrados.map(producto => (
+                    productosFiltrados.map(producto => {
+                      // Debug temporal - eliminar después
+                      console.log('Producto:', {
+                        id: producto.id,
+                        name: producto.name,
+                        image_url: producto.image_url,
+                        image_path: producto.image_path
+                      });
+                      
+                      return (
                       <div key={producto.id} className="bg-white overflow-hidden shadow rounded-lg border border-gray-200">
                         <div className="p-5">
                           <div className="flex justify-between items-center">
@@ -707,7 +731,8 @@ export default function Productos() {
                           </div>
                         </div>
                       </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </>
