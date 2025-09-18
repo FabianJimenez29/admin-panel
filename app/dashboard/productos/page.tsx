@@ -662,13 +662,10 @@ export default function Productos() {
                           <div className="flex justify-between items-center">
                             {producto.image_url ? (
                               <div className="w-16 h-16 relative">
-                                <Image 
+                                <img 
                                   src={producto.image_url}
                                   alt={producto.name}
-                                  fill
-                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                  style={{objectFit: 'cover'}}
-                                  className="rounded"
+                                  className="w-full h-full object-cover rounded"
                                 />
                               </div>
                             ) : (
