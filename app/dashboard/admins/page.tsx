@@ -1,6 +1,7 @@
 "use client";
 
 import Navbar from '@/components/Navbar';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { adminService } from '@/services/api';
 import { Admin } from '@/types';
@@ -180,9 +181,10 @@ export default function Admins() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Gestión de Administradores</h1>
           <button 
@@ -399,5 +401,6 @@ export default function Admins() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

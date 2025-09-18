@@ -1,6 +1,7 @@
 "use client";
 
 import Navbar from '@/components/Navbar';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { Product, Category } from '@/types';
 import { productService, categoryService } from '@/services/api';
@@ -530,9 +531,10 @@ export default function Productos() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Cabecera con botones de acción */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-2xl font-semibold text-gray-900">Gestión de Productos</h1>
@@ -995,5 +997,6 @@ export default function Productos() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

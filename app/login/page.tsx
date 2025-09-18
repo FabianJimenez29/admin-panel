@@ -53,17 +53,20 @@ export default function LoginPage() {
         typeof data.user.email === 'string' &&
         data.user.rol === 'superAdmin'
       ) {
+        // Guardar en el store
         setAuth(data.token, data.user);
-        // Guardar token en cookies para el middleware
-        document.cookie = `token=${data.token}; path=/;`;
+        
+        // Guardar token en cookies para el middleware con configuración más robusta
+        const cookieExpiry = new Date();
+        cookieExpiry.setDate(cookieExpiry.getDate() + 7); // 7 días
+        document.cookie = `token=${data.token}; path=/; expires=${cookieExpiry.toUTCString()}; SameSite=Lax`;
+        
+        toast.success('Login exitoso');
+        
+        // Redirigir al dashboard
         setTimeout(() => {
-          toast.success('Login exitoso');
-          router.replace('/dashboard');
-          // Fallback por si router.replace no funciona
-          setTimeout(() => {
-            window.location.replace('/dashboard');
-          }, 500);
-        }, 200);
+          window.location.href = '/dashboard';
+        }, 500);
       } else {
         toast.error('Datos de usuario inválidos o rol incorrecto');
       }

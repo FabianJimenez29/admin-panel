@@ -1,6 +1,7 @@
 "use client";
 
 import Navbar from '@/components/Navbar';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { appointmentService } from '@/services/api';
 import toast from 'react-hot-toast';
@@ -111,9 +112,10 @@ export default function Citas() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Gestión de Citas</h1>
           <div className="flex gap-2">
@@ -566,5 +568,6 @@ export default function Citas() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

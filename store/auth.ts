@@ -28,7 +28,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userData');
+    // Limpiar también las cookies
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     set({ token: null, user: null });
+    // Redirigir al login inmediatamente
+    window.location.href = '/login';
   },
   
   isAuthenticated: () => {
