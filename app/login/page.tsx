@@ -56,17 +56,16 @@ export default function LoginPage() {
         // Guardar en el store
         setAuth(data.token, data.user);
         
-        // Guardar token en cookies para el middleware con configuración más robusta
+        // Guardar token en cookies
         const cookieExpiry = new Date();
         cookieExpiry.setDate(cookieExpiry.getDate() + 7); // 7 días
         document.cookie = `token=${data.token}; path=/; expires=${cookieExpiry.toUTCString()}; SameSite=Lax`;
         
         toast.success('Login exitoso');
+        console.log('Login exitoso - Redirigiendo al dashboard');
         
-        // Redirigir al dashboard
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 500);
+        // Redirección directa e inmediata
+        window.location.href = '/dashboard';
       } else {
         toast.error('Datos de usuario inválidos o rol incorrecto');
       }
