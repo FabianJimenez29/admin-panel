@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { adminService } from '@/services/api';
+import { useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -19,12 +18,10 @@ import {
   Phone, 
   MapPin,
   Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
   Download,
-  Settings,
   UserCheck,
   UserX,
   Crown
@@ -160,6 +157,7 @@ export default function AdminsPage() {
       return;
     }
 
+    setLoading(true);
     try {
       // Mock save - replace with real API call
       const newAdmin: Admin = {
@@ -184,8 +182,10 @@ export default function AdminsPage() {
       }
 
       setShowCreateModal(false);
-    } catch (error) {
+    } catch {
       toast.error('Error al guardar el administrador');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,7 +195,7 @@ export default function AdminsPage() {
         a.id === adminId ? { ...a, activo: !a.activo } : a
       ));
       toast.success('Estado del administrador actualizado');
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar el estado');
     }
   };
@@ -208,7 +208,7 @@ export default function AdminsPage() {
     try {
       setAdmins(prev => prev.filter(a => a.id !== adminId));
       toast.success('Administrador eliminado exitosamente');
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar el administrador');
     }
   };

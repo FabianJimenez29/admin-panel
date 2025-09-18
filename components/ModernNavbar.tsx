@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown,
   Settings
 } from 'lucide-react';
 
@@ -24,7 +23,6 @@ export default function ModernNavbar() {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const navigation = [
     { 

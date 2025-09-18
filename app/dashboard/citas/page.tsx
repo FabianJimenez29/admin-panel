@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { appointmentService } from '@/services/api';
+import { useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ import {
   MapPin, 
   Car,
   Wrench,
-  Filter,
   Search,
   Eye,
   Edit,
@@ -99,7 +97,6 @@ const sampleCitas: Cita[] = [
 
 export default function CitasPage() {
   const [citas, setCitas] = useState<Cita[]>(sampleCitas);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [statusFilter, setStatusFilter] = useState('Todas');
@@ -182,7 +179,7 @@ export default function CitasPage() {
       
       setShowUpdateModal(false);
       toast.success('Cita actualizada exitosamente');
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar la cita');
     }
   };

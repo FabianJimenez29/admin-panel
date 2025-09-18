@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Product, Category } from '@/types';
-import { productService, categoryService } from '@/services/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Package, 
   Plus, 
@@ -22,9 +21,7 @@ import {
   DollarSign,
   Package2,
   Filter,
-  Download,
-  Upload,
-  MoreHorizontal
+  Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
@@ -58,13 +55,12 @@ const sampleCategories: Category[] = [
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>(sampleProducts);
-  const [categories, setCategories] = useState<Category[]>(sampleCategories);
+  const [categories] = useState<Category[]>(sampleCategories);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
 
   const [productForm, setProductForm] = useState({
@@ -95,7 +91,6 @@ export default function ProductsPage() {
       image_url: '',
       image_path: ''
     });
-    setImageFile(null);
     setImagePreview('');
     setIsCreateModalOpen(true);
   };
@@ -111,7 +106,6 @@ export default function ProductsPage() {
       image_url: product.image_url || '',
       image_path: product.image_path || ''
     });
-    setImageFile(null);
     setImagePreview(product.image_url || '');
     setIsCreateModalOpen(true);
   };
@@ -145,7 +139,7 @@ export default function ProductsPage() {
       }
 
       setIsCreateModalOpen(false);
-    } catch (error) {
+    } catch {
       toast.error('Error al guardar el producto');
     } finally {
       setLoading(false);
@@ -160,7 +154,7 @@ export default function ProductsPage() {
     try {
       setProducts(prev => prev.filter(p => p.id !== productId));
       toast.success('Producto eliminado exitosamente');
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar el producto');
     }
   };
@@ -168,7 +162,6 @@ export default function ProductsPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
