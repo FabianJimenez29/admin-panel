@@ -78,7 +78,7 @@ export default function CitasPage() {
     try {
       setLoading(true);
       const data = await appointmentService.getAppointmentsByDate(selectedDate);
-      setCitas(data || []);
+      setCitas(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error al cargar citas:', error);
       toast.error('Error al cargar las citas');
@@ -92,14 +92,14 @@ export default function CitasPage() {
     loadAppointments();
   }, [loadAppointments]);
 
-  const filteredCitas = citas.filter(cita => {
+  const filteredCitas = Array.isArray(citas) ? citas.filter(cita => {
     const matchesSearch = cita.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cita.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cita.numero_placa?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDate = cita.fecha === selectedDate;
     const matchesStatus = statusFilter === 'Todas' || cita.status === statusFilter;
     return matchesSearch && matchesDate && matchesStatus;
-  });
+  }) : [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -177,6 +177,15 @@ export default function CitasPage() {
   };
 
   const getStats = () => {
+    if (!Array.isArray(citas)) {
+      return {
+        total: 0,
+        pendientes: 0,
+        enProceso: 0,
+        completadas: 0
+      };
+    }
+    
     const today = new Date().toISOString().slice(0, 10);
     const todayCitas = citas.filter(c => c.fecha === today);
     

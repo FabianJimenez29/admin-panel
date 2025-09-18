@@ -81,7 +81,8 @@ export const appointmentService = {
   getAppointments: async () => {
     try {
       const response = await api.get('/quotes');
-      return response.data;
+      // El backend devuelve { quotes: [...] }
+      return response.data?.quotes || [];
     } catch (error) {
       console.error('Error en getAppointments:', error);
       throw error;
@@ -91,7 +92,8 @@ export const appointmentService = {
   getAppointmentsByDate: async (date: string) => {
     try {
       const response = await api.get(`/quotes?date=${date}`);
-      return response.data;
+      // El backend devuelve { quotes: [...] }
+      return response.data?.quotes || [];
     } catch (error) {
       console.error('Error en getAppointmentsByDate:', error);
       throw error;
