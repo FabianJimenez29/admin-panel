@@ -102,6 +102,7 @@ export default function Productos() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
   
   // Estado para indicar operaciones en curso
   const [saving, setSaving] = useState<boolean>(false);
@@ -250,38 +251,82 @@ export default function Productos() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔍 handleImageChange called', e.target.files);
+    
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const success = processImageFile(file);
       
-      // Validaciones básicas en el lado del cliente
-      // Verificar tamaño máximo (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('La imagen es demasiado grande. El tamaño máximo es 5MB');
-        e.target.value = ''; // Limpiar el input
-        return;
+      // Si hay error en la validación, limpiar el input
+      if (!success) {
+        e.target.value = '';
       }
-      
-      // Verificar tipo de archivo
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        toast.error('Formato de archivo no soportado. Use JPEG, PNG, GIF o WEBP');
-        e.target.value = ''; // Limpiar el input
-        return;
+    }
+  };
+
+  // Función para procesar archivos (común para input y drag & drop)
+  const processImageFile = (file: File) => {
+    console.log('📁 Processing file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+    
+    // Validaciones básicas en el lado del cliente
+    // Verificar tamaño máximo (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen es demasiado grande. El tamaño máximo es 5MB');
+      return false;
+    }
+    
+    // Verificar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Formato de archivo no soportado. Use JPEG, PNG, GIF o WEBP');
+      return false;
+    }
+    
+    console.log('✅ File validation passed, setting selectedImage');
+    setSelectedImage(file);
+    
+    // Crear una vista previa de la imagen
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && e.target.result) {
+        console.log('🖼️ Image preview created');
+        setImagePreview(e.target.result as string);
       }
-      
-      setSelectedImage(file);
-      
-      // Crear una vista previa de la imagen
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target && e.target.result) {
-          setImagePreview(e.target.result as string);
-        }
-      };
-      reader.onerror = () => {
-        toast.error('Error al leer el archivo de imagen');
-      };
-      reader.readAsDataURL(file);
+    };
+    reader.onerror = () => {
+      toast.error('Error al leer el archivo de imagen');
+    };
+    reader.readAsDataURL(file);
+    
+    return true;
+  };
+
+  // Funciones para drag & drop
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      processImageFile(file);
     }
   };
 
@@ -498,6 +543,48 @@ export default function Productos() {
     return category ? category.name : 'Categoría desconocida';
   };
 
+  async function loadProducts() {
+    setLoading(true);
+    setError(null);
+    try {
+      let productsData;
+      try {
+        productsData = await productService.getProducts();
+      } catch (error: unknown) {
+        if (error instanceof Error && 'code' in error && error.code === 'ECONNABORTED') {
+          productsData = null;
+        } else {
+          throw error;
+        }
+      }
+      if (productsData && Array.isArray(productsData)) {
+        setProductos(productsData);
+      } else {
+        setProductos(sampleProducts);
+        toast.custom(() => (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-md">
+            <div className="flex items-center">
+              <div className="text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  {productsData === null ? 'Timeout al cargar productos - usando datos de muestra' : 'Usando datos de productos de muestra'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ), { id: 'sample-products-warning', duration: 5000 });
+      }
+    } catch (error: unknown) {
+      setProductos(sampleProducts);
+      setError('Error al cargar productos. Usando datos de muestra.');
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -811,62 +898,101 @@ export default function Productos() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Imagen</label>
-                      <div className="mt-1 flex items-center">
-                        <span className="inline-block h-12 w-12 rounded-md overflow-hidden bg-gray-100">
-                          {imagePreview ? (
-                            <Image src={imagePreview} alt="Vista previa" width={48} height={48} className="h-full w-full object-cover" />
-                          ) : (
-                            <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
+                      <div 
+                        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                          isDragOver 
+                            ? 'border-indigo-500 bg-indigo-50' 
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                      >
+                        {imagePreview ? (
+                          <div className="space-y-3">
+                            <div className="mx-auto h-32 w-32 rounded-lg overflow-hidden bg-gray-100">
+                              <Image 
+                                src={imagePreview} 
+                                alt="Vista previa" 
+                                width={128} 
+                                height={128} 
+                                className="h-full w-full object-cover" 
+                              />
+                            </div>
+                            <p className="text-sm text-gray-600">Imagen seleccionada</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <svg 
+                              className="mx-auto h-12 w-12 text-gray-400" 
+                              stroke="currentColor" 
+                              fill="none" 
+                              viewBox="0 0 48 48"
+                            >
+                              <path 
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" 
+                                strokeWidth={2} 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                              />
                             </svg>
-                          )}
-                        </span>
-                        <label htmlFor="image-upload" className="ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                          Cambiar
-                          <input
-                            id="image-upload"
-                            name="image"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="sr-only"
-                          />
-                        </label>
-                        {(productForm.image_url || imagePreview) && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              // Si estamos editando un producto y tiene una imagen en Supabase, eliminarla
-                              if (editingProduct?.image_path && !selectedImage) {
-                                try {
-                                  await productService.deleteProductImage(editingProduct.image_path);
-                                  toast.success('Imagen eliminada correctamente');
-                                  
-                                  // Actualizar el producto en el estado local
-                                  setEditingProduct(prev => prev ? { ...prev, image_url: '', image_path: '' } : null);
-                                } catch (error) {
-                                  console.error('Error al eliminar imagen:', error);
-                                  toast.error('Error al eliminar la imagen');
-                                  return;
-                                }
-                              }
-                              
-                              // Limpiar la imagen localmente
-                              setProductForm(prev => ({ 
-                                ...prev, 
-                                image_url: ''
-                              }));
-                              setImagePreview(null);
-                              setSelectedImage(null);
-                            }}
-                            className="ml-3 text-sm text-red-600 hover:text-red-500"
-                            disabled={uploading}
-                          >
-                            {uploading ? 'Procesando...' : 'Eliminar'}
-                          </button>
+                            <div className="text-sm text-gray-600">
+                              <p className="font-medium">
+                                {isDragOver ? '¡Suelta la imagen aquí!' : 'Arrastra una imagen aquí'}
+                              </p>
+                              <p className="text-gray-500">o haz clic para seleccionar</p>
+                              <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP hasta 5MB</p>
+                            </div>
+                          </div>
                         )}
+                        
+                        {/* Input oculto para click */}
+                        <input
+                          id="image-upload"
+                          name="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
                       </div>
+                      
+                      {/* Botón para eliminar imagen */}
+                      {(productForm.image_url || imagePreview) && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            // Si estamos editando un producto y tiene una imagen en Supabase, eliminarla
+                            if (editingProduct?.image_path && !selectedImage) {
+                              try {
+                                await productService.deleteProductImage(editingProduct.image_path);
+                                toast.success('Imagen eliminada correctamente');
+                                
+                                // Actualizar el producto para remover la referencia a la imagen
+                                const updatedProduct = {
+                                  ...editingProduct,
+                                  image_url: '',
+                                  image_path: ''
+                                };
+                                await productService.updateProduct(editingProduct.id, updatedProduct);
+                                loadProducts(); // Recargar productos para mostrar cambios
+                              } catch (error) {
+                                console.error('Error al eliminar imagen:', error);
+                                toast.error('Error al eliminar la imagen');
+                              }
+                            }
+                            
+                            // Limpiar vista previa y archivo seleccionado
+                            setImagePreview(null);
+                            setSelectedImage(null);
+                            setProductForm({...productForm, image_url: ''});
+                          }}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        >
+                          Eliminar imagen
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
