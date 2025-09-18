@@ -26,14 +26,19 @@ interface AppointmentData {
   id: number;
   fecha: string;
   status: string;
-  [key: string]: any;
+  client_name?: string;
+  client_email?: string;
+  servicio?: string;
+  hora?: string;
 }
 
 interface AdminData {
   id: number;
   active: boolean;
   activo?: boolean;
-  [key: string]: any;
+  nombre?: string;
+  email?: string;
+  created_at?: string;
 }
 
 export default function DashboardPage() {
