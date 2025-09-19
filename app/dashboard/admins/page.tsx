@@ -153,7 +153,7 @@ export default function AdminsPage() {
     }
 
     if (!editingAdmin && !formData.password) {
-      toast.error('La contraseña es requerida para nuevos administradores');
+      toast.error('La contraseña es requerida para nuevos usuarios');
       return;
     }
 
@@ -176,12 +176,12 @@ export default function AdminsPage() {
         }
         
         await adminService.updateAdmin(editingAdmin.id, updateData);
-        toast.success('Administrador actualizado exitosamente');
+        toast.success('Usuario actualizado exitosamente');
         loadAdmins(); // Recargar la lista
       } else {
         // Crear nuevo administrador
         await adminService.createAdmin(formData);
-        toast.success('Administrador creado exitosamente');
+        toast.success('Usuario creado exitosamente');
         loadAdmins(); // Recargar la lista
       }
 
@@ -200,7 +200,7 @@ export default function AdminsPage() {
     } catch (error) {
       console.error('❌ Error al guardar administrador:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      toast.error(`Error al guardar el administrador: ${errorMessage}`);
+      toast.error(`Error al guardar el usuario: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -294,9 +294,9 @@ export default function AdminsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Administradores</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
               <p className="text-gray-600 mt-1">
-                Administra los usuarios con acceso al panel de control
+                Administra todos los usuarios del sistema con roles administrativos y técnicos
               </p>
             </div>
             <div className="flex gap-2">
@@ -306,7 +306,7 @@ export default function AdminsPage() {
               </Button>
               <Button onClick={handleCreateAdmin}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                Nuevo Admin
+                Nuevo Usuario
               </Button>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function AdminsPage() {
                 <div className="flex items-center">
                   <Users className="h-8 w-8 text-blue-600" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Admins</p>
+                    <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
                     <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export default function AdminsPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="Buscar administradores..."
+                      placeholder="Buscar usuarios..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -407,16 +407,16 @@ export default function AdminsPage() {
           {/* Admins Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Lista de Administradores</CardTitle>
+              <CardTitle>Lista de Usuarios</CardTitle>
               <CardDescription>
-                {filteredAdmins.length} administradores encontrados
+                {filteredAdmins.length} usuarios encontrados
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Administrador</TableHead>
+                    <TableHead>Usuario</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Ubicación</TableHead>
                     <TableHead>Rol</TableHead>
@@ -431,7 +431,7 @@ export default function AdminsPage() {
                       <TableCell colSpan={6} className="text-center py-8">
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          <span className="ml-2">Cargando administradores...</span>
+                          <span className="ml-2">Cargando usuarios...</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -440,11 +440,11 @@ export default function AdminsPage() {
                       <TableCell colSpan={6} className="text-center py-8">
                         <div className="flex flex-col items-center justify-center text-gray-500">
                           <Users className="h-12 w-12 text-gray-400 mb-2" />
-                          <p className="text-lg font-medium">No hay administradores</p>
+                          <p className="text-lg font-medium">No hay usuarios</p>
                           <p className="text-sm">
                             {searchTerm || statusFilter !== 'Todos' || roleFilter !== 'Todos'
-                              ? 'No se encontraron administradores con los filtros aplicados' 
-                              : 'Aún no hay administradores registrados en el sistema'
+                              ? 'No se encontraron usuarios con los filtros aplicados' 
+                              : 'Aún no hay usuarios registrados en el sistema'
                             }
                           </p>
                         </div>
@@ -544,10 +544,10 @@ export default function AdminsPage() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
-                  {editingAdmin ? 'Editar Administrador' : 'Crear Nuevo Administrador'}
+                  {editingAdmin ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingAdmin ? 'Modifica la información del administrador' : 'Completa la información del nuevo administrador'}
+                  {editingAdmin ? 'Modifica la información del usuario' : 'Completa la información del nuevo usuario'}
                 </DialogDescription>
               </DialogHeader>
               
