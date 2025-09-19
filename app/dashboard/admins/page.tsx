@@ -102,8 +102,8 @@ export default function AdminsPage() {
   };
 
   const statusOptions = ['Todos', 'Activo', 'Inactivo'];
-  const roleOptions = ['Todos', 'Super Admin', 'Admin', 'Moderador'];
-  const roles = ['Super Admin', 'Admin', 'Moderador'];
+  const roleOptions = ['Todos', 'superAdmin', 'Admin', 'Tecnico'];
+  const roles = ['superAdmin', 'Admin', 'Tecnico'];
   const provincias = ['San José', 'Cartago', 'Alajuela', 'Heredia', 'Puntarenas', 'Guanacaste', 'Limón'];
 
   const filteredAdmins = admins.filter(admin => {
@@ -262,12 +262,15 @@ export default function AdminsPage() {
 
   const getRoleBadge = (rol: string) => {
     switch (rol) {
-      case 'Super Admin':
-        return <Badge variant="default" className="bg-purple-600"><Crown className="w-3 h-3 mr-1" />{rol}</Badge>;
+      case 'superAdmin':
+      case 'superadmin':
+        return <Badge variant="default" className="bg-purple-600"><Crown className="w-3 h-3 mr-1" />Super Admin</Badge>;
       case 'Admin':
-        return <Badge variant="secondary"><Shield className="w-3 h-3 mr-1" />{rol}</Badge>;
-      case 'Moderador':
-        return <Badge variant="outline"><UserCheck className="w-3 h-3 mr-1" />{rol}</Badge>;
+      case 'admin':
+        return <Badge variant="secondary"><Shield className="w-3 h-3 mr-1" />Admin</Badge>;
+      case 'Tecnico':
+      case 'tecnico':
+        return <Badge variant="outline"><UserCheck className="w-3 h-3 mr-1" />Técnico</Badge>;
       default:
         return <Badge variant="secondary">{rol}</Badge>;
     }
@@ -278,7 +281,7 @@ export default function AdminsPage() {
       total: admins.length,
       activos: admins.filter(a => a.activo).length,
       inactivos: admins.filter(a => !a.activo).length,
-      superAdmins: admins.filter(a => a.rol === 'Super Admin').length
+      superAdmins: admins.filter(a => a.rol === 'superAdmin' || a.rol === 'superadmin').length
     };
   };
 

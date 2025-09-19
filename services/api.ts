@@ -300,6 +300,16 @@ export const adminService = {
       throw error;
     }
   },
+
+  getTechnicians: async () => {
+    try {
+      const response = await api.get('/users?role=tecnico');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener técnicos:', error);
+      throw error;
+    }
+  },
   
   createAdmin: async (adminData: {
     nombre: string;
@@ -309,12 +319,13 @@ export const adminService = {
     provincia?: string;
     canton?: string;
     distrito?: string;
+    rol?: string;
   }) => {
     try {
       const response = await api.post('/users', adminData);
       return response.data;
     } catch (error) {
-      console.error('Error al crear administrador:', error);
+      console.error('Error al crear usuario:', error);
       throw error;
     }
   },
@@ -327,12 +338,13 @@ export const adminService = {
     provincia?: string;
     canton?: string;
     distrito?: string;
+    rol?: string;
   }) => {
     try {
       const response = await api.put(`/users?id=${id}`, adminData);
       return response.data;
     } catch (error) {
-      console.error('Error al actualizar administrador:', error);
+      console.error('Error al actualizar usuario:', error);
       throw error;
     }
   },
@@ -342,7 +354,7 @@ export const adminService = {
       const response = await api.delete(`/users?id=${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error al eliminar administrador:', error);
+      console.error('Error al eliminar usuario:', error);
       throw error;
     }
   },

@@ -29,7 +29,7 @@ import {
   Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { appointmentService } from '@/services/api';
+import { appointmentService, adminService } from '@/services/api';
 
 type Cita = {
   id: number;
@@ -58,9 +58,10 @@ type Cita = {
 export default function CitasPage() {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [allCitas, setAllCitas] = useState<Cita[]>([]); // Todas las citas sin filtro
+  const [tecnicos, setTecnicos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState('Todas');
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -72,8 +73,7 @@ export default function CitasPage() {
     observaciones: ''
   });
 
-  const statusOptions = ['Todas', 'Pendiente', 'Confirmada', 'En Proceso', 'Completada', 'Cancelada'];
-  const tecnicos = ['Carlos López', 'Ana Rodríguez', 'Miguel Torres', 'Laura Sánchez'];
+  const statusOptions = ['Todas', 'Pendiente', 'En Proceso', 'Completada', 'Cancelada'];
 
   const loadAppointments = useCallback(async () => {
     try {
@@ -82,8 +82,8 @@ export default function CitasPage() {
       const data = await appointmentService.getAppointments();
       const validData = Array.isArray(data) ? data : [];
       setAllCitas(validData);
-      // Inicialmente mostrar las citas del día seleccionado
-      filterCitasByDate(validData, selectedDate);
+      // En el admin panel web, mostrar todas las citas inicialmente
+      setCitas(validData);
     } catch (error) {
       console.error('Error al cargar citas:', error);
       toast.error('Error al cargar las citas');
@@ -92,7 +92,18 @@ export default function CitasPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, []);
+
+  const loadTechnicians = useCallback(async () => {
+    try {
+      const response = await adminService.getTechnicians();
+      setTecnicos(response.data || []);
+    } catch (error) {
+      console.error('Error al cargar técnicos:', error);
+      // Si no puede cargar técnicos, usar lista vacía
+      setTecnicos([]);
+    }
+  }, []);
 
   const filterCitasByDate = (allCitas: Cita[], date: string) => {
     const filtered = allCitas.filter(cita => cita.fecha === date);
@@ -101,12 +112,19 @@ export default function CitasPage() {
 
   useEffect(() => {
     loadAppointments();
-  }, [loadAppointments]);
+    loadTechnicians();
+  }, [loadAppointments, loadTechnicians]);
 
   // Filtrar citas cuando cambie la fecha seleccionada
   useEffect(() => {
     if (allCitas.length > 0) {
-      filterCitasByDate(allCitas, selectedDate);
+      // Si se selecciona una fecha específica, filtrar por esa fecha
+      // Si no, mostrar todas las citas
+      if (selectedDate) {
+        filterCitasByDate(allCitas, selectedDate);
+      } else {
+        setCitas(allCitas);
+      }
     }
   }, [selectedDate, allCitas]);
 
@@ -310,7 +328,11 @@ export default function CitasPage() {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
+                    placeholder="Filtrar por fecha"
                   />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Dejar vacío para ver todas
+                  </div>
                 </div>
                 <div className="sm:w-48">
                   <select
@@ -325,6 +347,16 @@ export default function CitasPage() {
                     ))}
                   </select>
                 </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedDate('');
+                    setSearchTerm('');
+                    setStatusFilter('Todas');
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -332,7 +364,12 @@ export default function CitasPage() {
           {/* Appointments Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Citas del {new Date(selectedDate).toLocaleDateString()}</CardTitle>
+              <CardTitle>
+                {selectedDate ? 
+                  `Citas del ${new Date(selectedDate).toLocaleDateString()}` : 
+                  'Todas las Citas'
+                }
+              </CardTitle>
               <CardDescription>
                 {filteredCitas.length} citas encontradas
               </CardDescription>
@@ -346,7 +383,12 @@ export default function CitasPage() {
               ) : filteredCitas.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500">No hay citas para la fecha seleccionada</p>
+                  <p className="text-gray-500">
+                    {selectedDate ? 
+                      'No hay citas para la fecha seleccionada' : 
+                      'No hay citas registradas'
+                    }
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -505,7 +547,7 @@ export default function CitasPage() {
                         </div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                          <span>{selectedCita.fecha}</span>
+                          <span>{new Date(selectedCita.fecha).toLocaleDateString('es-ES')}</span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 text-gray-400 mr-2" />
@@ -602,8 +644,8 @@ export default function CitasPage() {
                   >
                     <option value="">Sin asignar</option>
                     {tecnicos.map(tecnico => (
-                      <option key={tecnico} value={tecnico}>
-                        {tecnico}
+                      <option key={tecnico.id} value={tecnico.nombre}>
+                        {tecnico.nombre}
                       </option>
                     ))}
                   </select>
