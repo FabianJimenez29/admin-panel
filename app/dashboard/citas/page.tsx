@@ -247,7 +247,7 @@ export default function CitasPage() {
   return (
     <ProtectedRoute>
       <AdminLayout>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>

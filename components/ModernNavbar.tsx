@@ -177,11 +177,6 @@ export default function ModernNavbar() {
           <div className="w-10" /> {/* Spacer */}
         </div>
       </div>
-
-      {/* Main content wrapper */}
-      <div className="lg:pl-64">
-        {/* Content will be rendered here by the page components */}
-      </div>
     </>
   );
 }

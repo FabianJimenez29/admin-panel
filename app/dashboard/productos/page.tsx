@@ -36,6 +36,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -106,6 +107,7 @@ export default function ProductsPage() {
       image_path: ''
     });
     setImagePreview('');
+    setSelectedImageFile(null);
     setIsCreateModalOpen(true);
   };
 
@@ -132,10 +134,32 @@ export default function ProductsPage() {
 
     setLoading(true);
     try {
+      let imageUrl = productForm.image_url;
+      let imagePath = productForm.image_path;
+
+      // Si hay una nueva imagen seleccionada, subirla primero
+      if (selectedImageFile) {
+        try {
+          console.log('📤 Subiendo nueva imagen...');
+          const uploadResult = await productService.uploadProductImage(selectedImageFile);
+          imageUrl = uploadResult.url;
+          imagePath = uploadResult.path;
+          console.log('✅ Imagen subida exitosamente:', imageUrl);
+        } catch (imageError) {
+          console.error('❌ Error al subir imagen:', imageError);
+          const errorMsg = imageError instanceof Error ? imageError.message : 'Error desconocido al subir imagen';
+          toast.error(`Error al subir la imagen: ${errorMsg}`);
+          // No continuar si la imagen falla, devolver error
+          return;
+        }
+      }
+
       const productData = {
         ...productForm,
         price: parseFloat(productForm.price),
-        stock: parseInt(productForm.stock) || 0
+        stock: parseInt(productForm.stock) || 0,
+        image_url: imageUrl,
+        image_path: imagePath
       };
 
       let result: Product;
@@ -164,6 +188,7 @@ export default function ProductsPage() {
         image_path: ''
       });
       setImagePreview('');
+      setSelectedImageFile(null);
     } catch (error) {
       console.error('❌ Error al guardar producto:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -208,11 +233,64 @@ export default function ProductsPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Función de test para verificar conexión con Supabase
+  const testSupabaseConnection = async () => {
+    try {
+      console.log('🧪 Iniciando test completo de Supabase...');
+      toast.loading('Probando conexión con Supabase...');
+      
+      const { supabase } = await import('@/lib/supabase');
+      
+      // Test 1: Conectividad básica
+      const { data: session, error: authError } = await supabase.auth.getSession();
+      console.log('1. Sesión:', session ? '✅ Activa' : '❌ No activa', authError);
+
+      // Test 2: Acceso a la tabla de productos
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .limit(1);
+      console.log('2. Acceso a tabla products:', products ? '✅ OK' : '❌ Error', productsError);
+
+      // Test 3: Verificar bucket de storage
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      console.log('3. Buckets disponibles:', buckets, bucketsError);
+      
+      const productImagesBucket = buckets?.find(bucket => bucket.name === 'product-images');
+      console.log('4. Bucket product-images:', productImagesBucket ? '✅ Existe' : '❌ No encontrado');
+
+      // Test 4: Test de upload simulado si el bucket existe
+      if (productImagesBucket) {
+        const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
+        const testPath = `test/test-${Date.now()}.txt`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(testPath, testFile);
+        
+        console.log('5. Test de upload:', uploadData ? '✅ OK' : '❌ Error', uploadError);
+        
+        // Limpiar archivo de test
+        if (uploadData) {
+          await supabase.storage.from('product-images').remove([uploadData.path]);
+          console.log('6. Archivo test eliminado');
+        }
+      }
+
+      toast.dismiss();
+      toast.success('Test completado. Revisa la consola para detalles.');
+    } catch (error) {
+      toast.dismiss();
+      console.error('❌ Error en test:', error);
+      toast.error(`Error de conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
@@ -224,7 +302,7 @@ export default function ProductsPage() {
   return (
     <ProtectedRoute>
       <AdminLayout>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -237,6 +315,9 @@ export default function ProductsPage() {
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Exportar
+              </Button>
+              <Button variant="outline" size="sm" onClick={testSupabaseConnection}>
+                🧪 Test Supabase
               </Button>
               <Button onClick={handleCreateProduct}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -558,7 +639,14 @@ export default function ProductsPage() {
                   Cancelar
                 </Button>
                 <Button onClick={handleSaveProduct} disabled={loading}>
-                  {loading ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Crear'}
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {editingProduct ? 'Actualizando...' : 'Creando...'}
+                    </>
+                  ) : (
+                    editingProduct ? 'Actualizar' : 'Crear'
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>

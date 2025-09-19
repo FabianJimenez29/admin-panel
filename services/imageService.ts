@@ -43,6 +43,20 @@ export const imageService = {
         type: file.type
       });
 
+      // Verificar conexión con Supabase
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      if (bucketsError) {
+        console.error('❌ Error al conectar con Supabase Storage:', bucketsError);
+        throw new Error(`Error de conexión con Storage: ${bucketsError.message}`);
+      }
+      
+      console.log('🪣 Buckets disponibles:', buckets?.map(b => b.name));
+      
+      const productBucket = buckets?.find(b => b.name === 'product-images');
+      if (!productBucket) {
+        throw new Error('El bucket "product-images" no existe. Verifica la configuración en Supabase.');
+      }
+
       // Subir archivo a Supabase Storage
       const { data, error } = await supabase.storage
         .from('product-images')
