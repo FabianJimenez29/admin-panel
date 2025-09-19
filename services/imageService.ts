@@ -43,18 +43,21 @@ export const imageService = {
         type: file.type
       });
 
-      // Verificar conexión con Supabase
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      if (bucketsError) {
-        console.error('❌ Error al conectar con Supabase Storage:', bucketsError);
-        throw new Error(`Error de conexión con Storage: ${bucketsError.message}`);
-      }
-      
-      console.log('🪣 Buckets disponibles:', buckets?.map(b => b.name));
-      
-      const productBucket = buckets?.find(b => b.name === 'product-images');
-      if (!productBucket) {
-        throw new Error('El bucket "product-images" no existe. Verifica la configuración en Supabase.');
+      // Verificar acceso directo al bucket en lugar de listar todos
+      try {
+        const { data: testAccess, error: accessError } = await supabase.storage
+          .from('product-images')
+          .list('', { limit: 1 });
+        
+        if (accessError) {
+          console.error('❌ Error de acceso al bucket product-images:', accessError);
+          throw new Error(`No se puede acceder al bucket: ${accessError.message}`);
+        }
+        
+        console.log('✅ Acceso al bucket product-images confirmado');
+      } catch (accessTestError) {
+        console.error('❌ Error al verificar acceso al bucket:', accessTestError);
+        throw new Error('No se puede verificar el acceso al bucket product-images');
       }
 
       // Subir archivo a Supabase Storage

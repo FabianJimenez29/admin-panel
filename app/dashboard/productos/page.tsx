@@ -261,15 +261,26 @@ export default function ProductsPage() {
         .limit(1);
       console.log('2. Acceso a tabla products:', products ? '✅ OK' : '❌ Error', productsError);
 
-      // Test 3: Verificar bucket de storage
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      console.log('3. Buckets disponibles:', buckets, bucketsError);
-      
-      const productImagesBucket = buckets?.find(bucket => bucket.name === 'product-images');
-      console.log('4. Bucket product-images:', productImagesBucket ? '✅ Existe' : '❌ No encontrado');
+      // Test 3: Verificar acceso directo al bucket product-images
+      let bucketExists = false;
+      try {
+        const { data: bucketFiles, error: bucketError } = await supabase.storage
+          .from('product-images')
+          .list('', { limit: 1 });
+        
+        if (!bucketError) {
+          bucketExists = true;
+          console.log('3. Bucket product-images: ✅ Accesible');
+          console.log('4. Archivos en bucket (muestra):', bucketFiles?.slice(0, 3));
+        } else {
+          console.log('3. Bucket product-images: ❌ Error de acceso:', bucketError);
+        }
+      } catch (bucketTestError) {
+        console.log('3. Bucket product-images: ❌ No accesible:', bucketTestError);
+      }
 
-      // Test 4: Test de upload simulado si el bucket existe
-      if (productImagesBucket) {
+      // Test 4: Test de upload simulado si el bucket es accesible
+      if (bucketExists) {
         const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
         const testPath = `test/test-${Date.now()}.txt`;
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -283,6 +294,8 @@ export default function ProductsPage() {
           await supabase.storage.from('product-images').remove([uploadData.path]);
           console.log('6. Archivo test eliminado');
         }
+      } else {
+        console.log('5. Test de upload: ⏭️ Omitido (bucket no accesible)');
       }
 
       toast.dismiss();
