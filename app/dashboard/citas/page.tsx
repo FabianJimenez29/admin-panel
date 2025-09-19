@@ -55,10 +55,18 @@ type Cita = {
   reparaciones_list?: string;
 };
 
+type Tecnico = {
+  id: number;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  rol: string;
+};
+
 export default function CitasPage() {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [allCitas, setAllCitas] = useState<Cita[]>([]); // Todas las citas sin filtro
-  const [tecnicos, setTecnicos] = useState<any[]>([]);
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
