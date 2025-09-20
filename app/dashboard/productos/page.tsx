@@ -576,7 +576,7 @@ export default function ProductsPage() {
                       id="name"
                       value={productForm.name}
                       onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ej: Proteína Whey 1kg"
+                      placeholder="Escribe Acá"
                     />
                   </div>
                   
@@ -586,7 +586,7 @@ export default function ProductsPage() {
                       id="description"
                       value={productForm.description}
                       onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descripción del producto..."
+                      placeholder="Escribe Acá"
                       className="w-full h-20 px-3 py-2 text-sm rounded-md border border-input bg-background resize-none"
                     />
                   </div>
