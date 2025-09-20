@@ -141,10 +141,26 @@ export default function ProductsPage() {
       if (selectedImageFile) {
         try {
           console.log('📤 Subiendo nueva imagen...');
+          
+          // Si estamos editando y hay una imagen anterior, guardar la ruta para eliminarla después
+          const previousImagePath = editingProduct?.image_path;
+          
           const uploadResult = await productService.uploadProductImage(selectedImageFile);
           imageUrl = uploadResult.url;
           imagePath = uploadResult.path;
           console.log('✅ Imagen subida exitosamente:', imageUrl);
+          
+          // Si había una imagen anterior y la nueva se subió correctamente, eliminar la anterior
+          if (previousImagePath && editingProduct) {
+            try {
+              await productService.deleteProductImage(previousImagePath);
+              console.log('🗑️ Imagen anterior eliminada:', previousImagePath);
+            } catch (deleteError) {
+              console.warn('⚠️ No se pudo eliminar la imagen anterior:', deleteError);
+              // No fallar por esto, la nueva imagen ya está subida
+            }
+          }
+          
         } catch (imageError) {
           console.error('❌ Error al subir imagen:', imageError);
           const errorMsg = imageError instanceof Error ? imageError.message : 'Error desconocido al subir imagen';
