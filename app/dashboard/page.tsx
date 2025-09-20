@@ -17,8 +17,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowRight,
-  BarChart3,
-  DollarSign
+  BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { productService, appointmentService, adminService, statisticsService } from '@/services/api';
