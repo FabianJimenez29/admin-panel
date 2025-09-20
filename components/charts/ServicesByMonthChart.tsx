@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer } from '@/components/ui/chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ServicesChartData {
@@ -127,9 +127,8 @@ export function ServicesByMonthChart({ data, loading = false }: ServicesByMonthC
                 height={60}
               />
               <YAxis />
-              <ChartTooltip 
-                content={<ChartTooltipContent />}
-                labelFormatter={(label) => `Mes: ${label}`}
+              <Tooltip 
+                labelFormatter={(label: string) => `Mes: ${label}`}
               />
               <Legend />
               {serviceKeys.map((serviceKey, index) => (

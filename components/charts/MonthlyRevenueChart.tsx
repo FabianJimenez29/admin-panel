@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer } from '@/components/ui/chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RevenueData {
@@ -31,7 +31,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: RevenueData }> }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
