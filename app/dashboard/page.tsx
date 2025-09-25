@@ -16,17 +16,10 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  ArrowRight,
-  BarChart3
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { productService, appointmentService, adminService, statisticsService } from '@/services/api';
-
-// Importar los componentes de gráficos
-import { ProductsPieChart } from '@/components/charts/ProductsPieChart';
-import { ServicesByMonthChart } from '@/components/charts/ServicesByMonthChart';
-import { AppointmentStatusChart } from '@/components/charts/AppointmentStatusChart';
-import { MonthlyRevenueChart } from '@/components/charts/MonthlyRevenueChart';
+import { productService, appointmentService, adminService } from '@/services/api';
 
 interface AppointmentData {
   id: number;
@@ -47,34 +40,12 @@ interface AdminData {
   created_at?: string;
 }
 
-interface ChartData {
-  productsByCategory: Array<{
-    name: string;
-    total_products: number;
-    total_stock: number;
-  }>;
-  servicesByMonth: Array<{
-    month: string;
-    monthName: string;
-    [serviceName: string]: string | number;
-  }>;
-  appointmentStatus: Array<{
-    status: string;
-    count: number;
-    percentage: number;
-  }>;
-  monthlyRevenue: Array<{
-    month: string;
-    monthName: string;
-    revenue: number;
-  }>;
-}
+
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [chartsLoading, setChartsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalAppointments: 0,
@@ -83,18 +54,9 @@ export default function DashboardPage() {
     activeAdmins: 0
   });
 
-  // Estados para los datos de gráficos
-  const [chartsData, setChartsData] = useState<ChartData>({
-    productsByCategory: [],
-    servicesByMonth: [],
-    appointmentStatus: [],
-    monthlyRevenue: []
-  });
-
   useEffect(() => {
     setMounted(true);
     loadDashboardData();
-    loadChartsData();
   }, []);
 
   const loadDashboardData = async () => {
@@ -132,42 +94,7 @@ export default function DashboardPage() {
     }
   };
 
-  const loadChartsData = async () => {
-    try {
-      setChartsLoading(true);
-      
-      // Cargar datos de gráficos en paralelo
-      const [products, services, appointments, revenue] = await Promise.all([
-        statisticsService.getProductsByCategory().catch(err => {
-          console.error('Error cargando productos por categoría:', err);
-          return [];
-        }),
-        statisticsService.getServicesByMonth().catch(err => {
-          console.error('Error cargando servicios por mes:', err);
-          return [];
-        }),
-        statisticsService.getAppointmentStatus().catch(err => {
-          console.error('Error cargando estado de citas:', err);
-          return [];
-        }),
-        statisticsService.getMonthlyRevenue().catch(err => {
-          console.error('Error cargando ingresos mensuales:', err);
-          return [];
-        })
-      ]);
 
-      setChartsData({
-        productsByCategory: products as ChartData['productsByCategory'],
-        servicesByMonth: services as ChartData['servicesByMonth'],
-        appointmentStatus: appointments as ChartData['appointmentStatus'],
-        monthlyRevenue: revenue as ChartData['monthlyRevenue']
-      });
-    } catch (error) {
-      console.error('Error al cargar datos de gráficos:', error);
-    } finally {
-      setChartsLoading(false);
-    }
-  };
 
   if (!mounted) return null;
 
@@ -317,43 +244,7 @@ export default function DashboardPage() {
             })}
           </div>
 
-          {/* Charts Section */}
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                <BarChart3 className="w-6 h-6 mr-2" />
-                Estadísticas y Gráficos
-              </h2>
-            </div>
 
-            {/* First row of charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ProductsPieChart 
-                data={chartsData.productsByCategory} 
-                loading={chartsLoading}
-              />
-              <AppointmentStatusChart 
-                data={chartsData.appointmentStatus} 
-                loading={chartsLoading}
-              />
-            </div>
-
-            {/* Second row of charts */}
-            <div className="grid grid-cols-1 gap-6">
-              <ServicesByMonthChart 
-                data={chartsData.servicesByMonth} 
-                loading={chartsLoading}
-              />
-            </div>
-
-            {/* Third row of charts */}
-            <div className="grid grid-cols-1 gap-6">
-              <MonthlyRevenueChart 
-                data={chartsData.monthlyRevenue} 
-                loading={chartsLoading}
-              />
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Quick Actions */}
