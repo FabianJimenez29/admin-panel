@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,73 +10,108 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
+next-env.d.ts
 
-# production
+# Production
 /build
+/dist
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 
-app-example
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# Tailwind CSS
+.tailwindcss
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# Stylelint
+.stylelintcache
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs/
+*.log
+
+# Optional npm cache directory
+.npm
+
+# Temporary files
+*.tmp
+*.temp
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Auto-generated files
+*.generated.*
+
+# Storybook
+.storybook-out
+storybook-static/
+
+# Sentry
+.sentryclirc
 
